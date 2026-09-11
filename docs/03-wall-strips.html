@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Turn ray hits into vertical wall strips. Derive the projection, distinguish ray length from camera depth, and watch a room emerge from the grid."
+    />
+    <meta name="theme-color" content="#233b3d" />
+    <title>Wall projection — Morph Field Notes</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/style.css" />
+    <script type="module" src="assets/site.mjs"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="shell">
+      <aside class="sidebar">
+        <a class="brand" href="index.html"
+          ><svg class="mark" viewBox="0 0 40 40" aria-hidden="true">
+            <path
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+              d="M3 33V7l17 13L37 7v26M3 7l17 26L37 7"
+            /></svg
+          >Morph<small>LAB</small></a
+        >
+        <div class="nav-label">The raycasting notebook</div>
+        <nav aria-label="Lessons">
+          <a href="index.html"><span class="nav-number">00</span>Overview</a
+          ><a href="01-single-ray.html"
+            ><span class="nav-number">01</span>One ray · DDA</a
+          ><a href="02-ray-fan.html"
+            ><span class="nav-number">02</span>A fan of rays</a
+          ><a href="03-wall-strips.html" aria-current="page"
+            ><span class="nav-number">03</span>Wall projection</a
+          >
+        </nav>
+        <div class="sidebar-bottom">
+          <div class="tiny-grid" aria-hidden="true">
+            ▪ ▪ ▪ ▪<br />▪ · · ▪<br />▪ · ↗ ▪<br />▪ ▪ ▪ ▪
+          </div>
+          A small world.<br />Built from first principles.<a
+            href="https://github.com/apandey1710/Morph"
+            >Project on GitHub ↗</a
+          >
+        </div>
+      </aside>
+      <main id="main" class="main">
+        <div class="content">
+          <header class="topbar">
+            <span>FIELD NOTES / GRAPHICS PROGRAMMING</span
+            ><span class="status">C++20 · raylib · CPU raycasting</span>
+          </header>
+          <section class="hero">
+            <div class="eyebrow">EXPERIMENT 03 / PERSPECTIVE</div>
+            <h1>A grid below.<br /><em>A world ahead.</em></h1>
+            <p class="lead">
+              Turn ray hits into vertical wall strips. Derive the projection,
+              distinguish ray length from camera depth, and watch a room emerge
+              from the grid.
+            </p>
+            <div class="hero-meta">
+              <span>20–30 minute lesson</span
+              ><span>Prerequisite: lesson 02</span
+              ><span>Output: a first-person level</span>
+            </div>
+          </section>
+          <noscript
+            ><p>
+              The lessons and downloads work without JavaScript. Enable it to
+              use the interactive ray labs.
+            </p></noscript
+          >
+          <section
+            class="demo"
+            data-demo="projection"
+            aria-label="Interactive projection demonstration"
+          >
+            <div class="demo-heading">
+              <span>Ray lab / projection</span
+              ><span class="live">Interactive experiment ↗</span>
+            </div>
+            <div class="demo-grid">
+              <div class="map-wrap">
+                <canvas
+                  class="map-canvas"
+                  width="560"
+                  height="560"
+                  role="img"
+                  aria-label="Overhead 8 by 8 map. Player at 2.5, 1.5. Rays stop at their first wall; controls update the view and the text readout."
+                  >The player starts at (2.5, 1.5). Facing east, the first wall
+                  is cell (7, 1), at x = 7.</canvas
+                >
+              </div>
+              <div class="demo-panel">
+                <h3>The same rays. A new view.</h3>
+                <p>
+                  Choose the flat-wall preset, then switch to ray length. The
+                  preset moves the player to (4.5, 4.5), facing south, so the
+                  whole wall fits in view.
+                </p>
+                <label class="control"
+                  >Direction<input
+                    name="angle"
+                    type="range"
+                    min="-180"
+                    max="180"
+                    value="0"
+                    step="1"
+                  /><output>0°</output></label
+                ><label class="control"
+                  >Horizontal field of view<input
+                    name="fov"
+                    type="range"
+                    min="30"
+                    max="110"
+                    value="60"
+                    step="1"
+                  /><output>60°</output></label
+                ><label class="check"
+                  ><input name="incorrect" type="checkbox" />Use ray length
+                  (show fisheye error)</label
+                >
+                <div class="step-buttons">
+                  <button data-flat>Flat-wall preset</button
+                  ><button data-reset-camera>Reset camera</button>
+                </div>
+                <div class="legend">
+                  <span>X-side hit</span><span>Y-side hit</span
+                  ><span>Camera plane</span>
+                </div>
+              </div>
+            </div>
+            <div class="readout" role="status" aria-live="polite"></div>
+            <div class="projection-label projection-state">
+              Camera depth · correct projection
+            </div>
+            <canvas
+              class="view-canvas"
+              width="760"
+              height="430"
+              role="img"
+              aria-label="First-person wall projection, updated by the direction and field of view controls. The checkbox compares correct depth with incorrect ray length."
+              >Interactive first-person view. The text below derives the same
+              projection.</canvas
+            >
+          </section>
+          <nav class="toc" aria-label="On this page">
+            <strong>In this lesson</strong><a href="#depth">01 / Camera depth</a
+            ><a href="#height">02 / Project height</a
+            ><a href="#strips">03 / Draw columns</a
+            ><a href="#limits">04 / Edge cases</a
+            ><a href="#checks">05 / Experiments</a>
+          </nav>
+          <article class="prose">
+            <h2 id="depth">01 / Depth is how far forward, not how far along</h2>
+            <p>
+              Stand in front of a flat wall. The point straight ahead is closer
+              in straight-line distance than points off to either side. Yet all
+              those points share the same forward depth, and the wall's top edge
+              should look straight when it is parallel to the screen.
+            </p>
+            <p>
+              If you shrink wall strips using the longer edge-ray distances, the
+              edges become too short. The result is the familiar fisheye
+              distortion: a flat wall appears to bow. The cure is to project
+              using the component of the hit displacement along the camera's
+              forward direction.
+            </p>
+            <div class="equation">
+              H = hitPosition − playerPosition<br />rayLength = length(H)<br />cameraDepth
+              = dot(H, forward)
+            </div>
+            <p>
+              The dot product is <code>H.x * forward.x + H.y * forward.y</code>.
+              Because forward has unit length, it measures how much of H points
+              forward. Equivalently, for a unit ray direction making angle α
+              with forward, <code>cameraDepth = rayLength × cos(α)</code>.
+            </p>
+            <h3>Why our DDA parameter already is depth</h3>
+            <p>
+              We generated the ray as D = forward + u × plane and did not
+              normalize it. We also know that the hit displacement is H = tD.
+              Substitute those two facts:
+            </p>
+            <div class="equation">
+              depth = dot(tD, forward)<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+              t × [dot(forward, forward) + u × dot(plane, forward)]<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+              t × [1 + u × 0]<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= t
+            </div>
+            <p>
+              This is a consequence of the camera construction, not a universal
+              property of DDA. If you normalize D, then t becomes traveled ray
+              length and you must calculate depth separately. Do not apply
+              another cosine correction to our already-correct t.
+            </p>
+            <aside class="callout warm">
+              <strong>A numerical check</strong>
+              <p>
+                For a front-facing wall at depth 4 and a 60° FOV, the edge ray
+                is D ≈ (1, 0.577). It reaches the wall at t = 4, but travels 4 ×
+                √(1 + 0.577²) ≈ 4.619 world units. Dividing by 4.619 instead of
+                4 makes that edge strip about 13.4% too short.
+              </p>
+            </aside>
+            <h2 id="height">02 / Similar triangles turn units into pixels</h2>
+            <p>
+              A wall's projected height gets smaller in inverse proportion to
+              its depth: double the depth, halve its pixel height. To determine
+              the actual number of pixels, we need the camera's focal distance
+              measured in pixels.
+            </p>
+            <p>
+              Let W and H be the viewport width and height in pixels. Let h be
+              wall height in world units and z be positive camera depth in world
+              units. With horizontal FOV and square pixels:
+            </p>
+            <div class="equation">
+              focalPixels = (W / 2) / tan(FOV / 2)<br />stripHeight = h ×
+              focalPixels / z
+            </div>
+            <p>
+              The first expression is the same camera-plane triangle from lesson
+              2, now measured on the screen. The second comes from similar
+              triangles: the ratio of projected height to focal distance equals
+              wall height divided by world depth. World units cancel, leaving
+              pixels.
+            </p>
+            <p>
+              At W = 960 and FOV = 60°, focalPixels ≈ 831.38. A wall of height 1
+              at depth 4 occupies about <strong>207.85 pixels</strong>. At depth
+              8 it occupies about 103.92 pixels.
+            </p>
+            <aside class="callout">
+              <strong>Why not just use screenHeight / depth?</strong>
+              <p>
+                That common shortcut silently chooses a particular focal
+                distance. Using the horizontal FOV explicitly keeps the image
+                consistent when the window aspect ratio or FOV changes. The
+                vertical FOV follows from 2 × atan((H / 2) / focalPixels).
+              </p>
+            </aside>
+            <p>
+              For this lesson, the eye is at half the wall height and the camera
+              has no pitch or roll. The horizon is halfway down the viewport, so
+              center every strip vertically:
+            </p>
+            <div class="equation">
+              top = H / 2 − stripHeight / 2<br />bottom = H / 2 + stripHeight /
+              2
+            </div>
+            <p>
+              These centered formulas rely on that eye-height assumption.
+              Variable wall heights, stairs, or an eye above the midpoint need
+              separate top and bottom projections.
+            </p>
+            <h2 id="strips">03 / One ray for each screen column</h2>
+            <p>
+              Keep the same sampling formula, but replace the debug ray count
+              with the viewport width. Each x coordinate owns a one-pixel-wide
+              wall strip. Cast a ray, obtain its depth, calculate the strip's
+              height, and shade it by which side was crossed.
+            </p>
+            <p>
+              The following is the projection core from the complete checkpoint.
+              It runs inside the drawing loop after the camera basis is
+              computed. It requires the shared headers from the earlier lessons
+              and <code>&lt;algorithm&gt;</code> for clamping.
+            </p>
+            <p class="code-caption">
+              Projection fragments · shared helper cameraRay returns forward + u
+              × plane
+            </p>
+            <pre
+              data-copy
+            ><code class="language-cpp">// Once before the loop; this example uses a fixed 960 × 540 viewport.
+const double focalPixels = (screenWidth * 0.5) / std::tan(fovRadians * 0.5);
+constexpr double wallHeight = 1.0;
+constexpr double nearDepth = 0.001; // One thousandth of a world cell.
+
+// Inside BeginDrawing / EndDrawing:
+ClearBackground(Color{22, 31, 42, 255});
+DrawRectangle(0, screenHeight / 2, screenWidth, screenHeight / 2,
+              Color{34, 41, 43, 255});
+
+for (int x = 0; x &lt; screenWidth; ++x)
+{
+    const float u = 2.0f * (static_cast&lt;float&gt;(x) + 0.5f) / screenWidth - 1.0f;
+    const Vector2 ray = cameraRay(forward, plane, u); // Not normalized.
+    const auto hit = castRay(level, playerPosition, ray);
+    if (!hit)
+    {
+        continue;
+    }
+
+    const double depth = std::max(hit-&gt;t, nearDepth);
+    const double height = wallHeight * focalPixels / depth;
+    const double top = std::clamp((screenHeight - height) * 0.5, 0.0,
+                                  static_cast&lt;double&gt;(screenHeight));
+    const double bottom = std::clamp((screenHeight + height) * 0.5, 0.0,
+                                     static_cast&lt;double&gt;(screenHeight));
+    const int yStart = static_cast&lt;int&gt;(std::floor(top));
+    const int yEnd = static_cast&lt;int&gt;(std::ceil(bottom));
+    const Color shade = hit-&gt;side == Side::X
+        ? Color{111, 207, 192, 255}
+        : Color{58, 130, 136, 255};
+    DrawRectangle(x, yStart, 1, yEnd - yStart, shade);
+}</code></pre>
+            <p>
+              The two wall colors are simple orientation cues, not a lighting
+              model. They help you see corners. The floor and ceiling are flat
+              background colors, not floor or ceiling raycasting. All the
+              wall-intersection and projection math runs on the CPU; raylib
+              presents the rectangles. A CPU framebuffer can replace the draw
+              calls later without changing the geometry.
+            </p>
+            <h2 id="limits">04 / Handle the edges deliberately</h2>
+            <ul>
+              <li>
+                <strong>Zero or tiny depth:</strong> a player on a wall boundary
+                can produce t = 0. The 0.001-world-unit lower bound prevents
+                division by zero and caps the projected height. It is a
+                numerical guard, not a collision radius or a physical near-plane
+                clipping system.
+              </li>
+              <li>
+                <strong>Large projected heights:</strong> clamp the
+                floating-point top and bottom to the viewport before converting
+                them to integers. This avoids overflowing integer coordinates
+                for nearby walls.
+              </li>
+              <li>
+                <strong>Pixel coverage:</strong> floor the top and ceil the
+                bottom so a visible fractional strip does not disappear. The
+                rectangle covers the interval [yStart, yEnd).
+              </li>
+              <li>
+                <strong>No hit:</strong> leave the existing sky/floor background
+                in that column. The DDA helper does not invent a wall at an open
+                map edge.
+              </li>
+              <li>
+                <strong>Resize or change FOV:</strong> recalculate focalPixels
+                from the actual viewport dimensions and current FOV. The
+                downloadable checkpoint uses a fixed-size window and fixed 60°
+                FOV.
+              </li>
+              <li>
+                <strong>Movement:</strong> the player stays fixed here. If you
+                add movement, use a separate collision query that accounts for
+                the player's size, especially at corners.
+              </li>
+            </ul>
+            <h2 id="checks">05 / Prove the projection works</h2>
+            <ol>
+              <li>
+                In the browser lab, choose the flat-wall preset. It places the
+                player at (4.5, 4.5), facing south at 90° with a 60° FOV. The
+                south wall has depth 2.5 across the entire view, so every strip
+                should have equal height.
+              </li>
+              <li>
+                Toggle ray length while using that preset: the top and bottom
+                edges should bow. Turn the toggle off: they should straighten.
+                Reset camera returns to the original spawn at (2.5, 1.5), facing
+                east.
+              </li>
+              <li>
+                Keep direction fixed and widen the FOV. More of the room should
+                become visible and the center wall strip should get shorter,
+                because focalPixels decreases.
+              </li>
+              <li>
+                For a controlled numeric experiment, compare a wall at depth 4
+                to one at depth 8. The projected height should halve, aside from
+                integer rounding.
+              </li>
+              <li>
+                In the C++ checkpoint, press F. For the same controlled
+                flat-wall experiment, set playerPosition to (4.5f, 4.5f) in
+                scene.hpp and the initial angle to pi / 2 in the lesson source.
+                The intentionally wrong branch multiplies t by the ray's length.
+                Restore camera depth before continuing the renderer.
+              </li>
+            </ol>
+            <p class="code-caption">
+              Fisheye experiment · demonstrates the distance you should not use
+              for strip projection
+            </p>
+            <pre
+              data-copy
+            ><code class="language-cpp">// Deliberately wrong experiment, not a correction:
+const double rayLength = hit-&gt;t * std::hypot(ray.x, ray.y);
+const double wrongHeight = wallHeight * focalPixels / rayLength;</code></pre>
+            <aside class="callout">
+              <strong>Checkpoint</strong>
+              <p>
+                You now have a viewable level: one grid, a camera, a first-wall
+                query, and a column projection. Keep the overhead view available
+                as you add movement, collision, then textures. It is the
+                quickest way to distinguish a traversal bug from a projection
+                bug.
+              </p>
+            </aside>
+            <h2 id="build">Build this checkpoint</h2>
+            <p>
+              The download contains three standalone C++20 programs and two
+              shared headers. They use the same 8 × 8 map and player position as
+              Morph. Each program owns its own <code>main()</code>; build one at
+              a time. The examples are tutorial files, not changes to the
+              engine.
+            </p>
+            <div class="download-links">
+              <a href="examples/morph-tutorials.zip" download
+                >↓ All examples (.zip)</a
+              ><a href="examples/03-wall-strips.cpp" download
+                >Lesson 03 source</a
+              ><a href="examples/raycaster.hpp" download>DDA header</a
+              ><a href="examples/scene.hpp" download>Drawing helpers</a>
+            </div>
+            <p>
+              Extract the archive into an empty directory, then configure it
+              with CMake. The example build downloads the same pinned raylib
+              version as Morph; it needs the same compiler and platform
+              development libraries.
+            </p>
+            <pre><code>cmake -S . -B build
+cmake --build build --target tutorial_03
+./build/tutorial_03</code></pre>
+            <p>
+              For multi-configuration generators, add
+              <code>--config Debug</code> to the build command and run the
+              executable under <code>build/Debug/</code> (with
+              <code>.exe</code> on Windows). Use Left / Right to rotate and
+              Escape to exit. Press F to toggle the deliberate fisheye error.
+            </p>
+          </article>
+          <nav class="lesson-footer" aria-label="Adjacent lessons">
+            <a href="02-ray-fan.html">← A fan of rays</a
+            ><a href="index.html">Back to the notebook ↗</a>
+          </nav>
+          <footer class="site-footer">
+            <span>MORPH / LEARN BY MAKING IT VISIBLE</span
+            ><span>One grid. Three experiments. A first-person world.</span>
+          </footer>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

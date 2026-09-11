@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Build a viewable level from an ordinary grid. Three hands-on lessons take you from a single wall hit to a first-person renderer you can explain."
+    />
+    <meta name="theme-color" content="#233b3d" />
+    <title>A small world, built from rays — Morph Field Notes</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/style.css" />
+    <script type="module" src="assets/site.mjs"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="shell">
+      <aside class="sidebar">
+        <a class="brand" href="index.html"
+          ><svg class="mark" viewBox="0 0 40 40" aria-hidden="true">
+            <path
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+              d="M3 33V7l17 13L37 7v26M3 7l17 26L37 7"
+            /></svg
+          >Morph<small>LAB</small></a
+        >
+        <div class="nav-label">The raycasting notebook</div>
+        <nav aria-label="Lessons">
+          <a href="index.html" aria-current="page"
+            ><span class="nav-number">00</span>Overview</a
+          ><a href="01-single-ray.html"
+            ><span class="nav-number">01</span>One ray · DDA</a
+          ><a href="02-ray-fan.html"
+            ><span class="nav-number">02</span>A fan of rays</a
+          ><a href="03-wall-strips.html"
+            ><span class="nav-number">03</span>Wall projection</a
+          >
+        </nav>
+        <div class="sidebar-bottom">
+          <div class="tiny-grid" aria-hidden="true">
+            ▪ ▪ ▪ ▪<br />▪ · · ▪<br />▪ · ↗ ▪<br />▪ ▪ ▪ ▪
+          </div>
+          A small world.<br />Built from first principles.<a
+            href="https://github.com/apandey1710/Morph"
+            >Project on GitHub ↗</a
+          >
+        </div>
+      </aside>
+      <main id="main" class="main">
+        <div class="content">
+          <header class="topbar">
+            <span>FIELD NOTES / GRAPHICS PROGRAMMING</span
+            ><span class="status">C++20 · raylib · CPU raycasting</span>
+          </header>
+          <section class="hero">
+            <div class="eyebrow">MORPH / AN INTERACTIVE RAYCASTING COURSE</div>
+            <h1>A small world.<br /><em>Built from rays.</em></h1>
+            <p class="lead">
+              Build a viewable level from an ordinary grid. Three hands-on
+              lessons take you from a single wall hit to a first-person renderer
+              you can explain.
+            </p>
+            <div class="hero-meta">
+              <span>03 detailed lessons</span><span>Interactive diagrams</span
+              ><span>Runnable C++ checkpoints</span>
+            </div>
+          </section>
+          <noscript
+            ><p>
+              The lessons and downloads work without JavaScript. Enable it to
+              use the interactive ray labs.
+            </p></noscript
+          >
+          <section
+            class="demo"
+            data-demo="fan"
+            aria-label="Interactive fan demonstration"
+          >
+            <div class="demo-heading">
+              <span>Ray lab / fan</span
+              ><span class="live">Interactive experiment ↗</span>
+            </div>
+            <div class="demo-grid">
+              <div class="map-wrap">
+                <canvas
+                  class="map-canvas"
+                  width="560"
+                  height="560"
+                  role="img"
+                  aria-label="Overhead 8 by 8 map. Player at 2.5, 1.5. Rays stop at their first wall; controls update the view and the text readout."
+                  >The player starts at (2.5, 1.5). Facing east, the first wall
+                  is cell (7, 1), at x = 7.</canvas
+                >
+              </div>
+              <div class="demo-panel">
+                <h3>A camera you can inspect</h3>
+                <p>
+                  Rotate the camera and widen its field of view. The purple
+                  segment is the camera plane; each green ray samples a point
+                  along it.
+                </p>
+                <label class="control"
+                  >Direction<input
+                    name="angle"
+                    type="range"
+                    min="-180"
+                    max="180"
+                    value="0"
+                    step="1"
+                  /><output>0°</output></label
+                ><label class="control"
+                  >Horizontal field of view<input
+                    name="fov"
+                    type="range"
+                    min="30"
+                    max="110"
+                    value="60"
+                    step="1"
+                  /><output>60°</output></label
+                ><label class="control"
+                  >Ray count<input
+                    name="count"
+                    type="range"
+                    min="3"
+                    max="81"
+                    value="31"
+                    step="2"
+                  /><output>31</output></label
+                >
+                <div class="legend">
+                  <span>X-side hit</span><span>Y-side hit</span
+                  ><span>Camera plane</span>
+                </div>
+              </div>
+            </div>
+            <div class="readout" role="status" aria-live="polite"></div>
+          </section>
+          <div class="section-heading">
+            <span>THE PATH</span>
+            <h2>From a cell to a camera.</h2>
+          </div>
+          <div class="cards">
+            <a class="card" href="01-single-ray.html"
+              ><span class="number">EXPERIMENT 01</span>
+              <h3>Find the first wall</h3>
+              <p>
+                Walk through grid boundaries with DDA. Draw the hit point and
+                inspect every cell along the way.
+              </p>
+              <div class="card-bottom">
+                <span>20–30 MIN</span><span>Read lesson →</span>
+              </div></a
+            ><a class="card" href="02-ray-fan.html"
+              ><span class="number">EXPERIMENT 02</span>
+              <h3>Give the camera a view</h3>
+              <p>
+                Build a camera plane, choose a field of view, and make every ray
+                correspond to a screen sample.
+              </p>
+              <div class="card-bottom">
+                <span>15–25 MIN</span><span>Read lesson →</span>
+              </div></a
+            ><a class="card" href="03-wall-strips.html"
+              ><span class="number">EXPERIMENT 03</span>
+              <h3>Make distance visible</h3>
+              <p>
+                Project wall height into pixels. Understand camera depth, remove
+                fisheye distortion, and render a room.
+              </p>
+              <div class="card-bottom">
+                <span>20–30 MIN</span><span>Read lesson →</span>
+              </div></a
+            >
+          </div>
+          <div class="prose">
+            <h2>Your starting point</h2>
+            <p>
+              You have an 8 × 8 grid, a player at (2.5, 1.5), and a raylib
+              drawing loop. A dark cell means wall; an empty cell means
+              traversable space. These lessons add one idea at a time, keeping
+              the overhead map useful all the way to the first-person view.
+            </p>
+            <aside class="callout">
+              <strong>The working model</strong>
+              <p>
+                Keep the raycaster on the CPU: find a wall for each ray,
+                calculate its projected size, then let raylib draw the resulting
+                lines or strips. Full 3D meshes and a custom GPU pipeline would
+                obscure the geometry we are learning.
+              </p>
+            </aside>
+            <h2>Keep these spaces separate</h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Space</th>
+                    <th scope="col">Meaning</th>
+                    <th scope="col">Example</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>World</td>
+                    <td>
+                      Floating-point positions on the horizontal plane. One cell
+                      is one unit.
+                    </td>
+                    <td>Player = (2.5, 1.5)</td>
+                  </tr>
+                  <tr>
+                    <td>Map</td>
+                    <td>
+                      Integer indices, row before column. Bounds are checked
+                      before indexing.
+                    </td>
+                    <td>level[y][x]</td>
+                  </tr>
+                  <tr>
+                    <td>Camera</td>
+                    <td>
+                      Forward depth and sideways position relative to the
+                      player.
+                    </td>
+                    <td>depth = dot(hit − player, forward)</td>
+                  </tr>
+                  <tr>
+                    <td>Screen</td>
+                    <td>Pixels from the top-left. +x right, +y down.</td>
+                    <td>pixelX = offsetX + worldX × scale</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              On our overhead map, world +x points right and +y points down. A
+              positive rotation is clockwise. Walls have height 1 world unit.
+              For projection, the eye is halfway up the wall, the camera is
+              level, and screen pixels are square.
+            </p>
+            <h2>Before your first ray</h2>
+            <p>
+              In the current map loop, use <code>y &lt; mapHeight</code> and
+              <code>x &lt; mapWidth</code>. The reversed bounds happen to work
+              for a square map, but fail when the dimensions differ. Draw all
+              the cells first, then the rays, then the player once. Drawing the
+              player inside the cell loop repeats the work and lets later cells
+              paint over it.
+            </p>
+            <p>
+              The earlier expression
+              <code>playerScreen.x + 0.75f * pixelsPerCell</code> chooses a
+              visual direction-line endpoint. It does not find a wall. In lesson
+              1, the endpoint comes from an actual grid intersection.
+            </p>
+            <div class="intro-actions">
+              <a class="button" href="01-single-ray.html"
+                >Start with one ray <span>→</span></a
+              ><a
+                class="button secondary"
+                href="examples/morph-tutorials.zip"
+                download
+                >Download the checkpoints ↓</a
+              >
+            </div>
+            <h2>How to use the notebook</h2>
+            <p>
+              First move the controls and predict what will happen. Then work
+              through the equations and focused snippets. Finally, run the
+              complete checkpoint and try the observable checks at the end. The
+              browser labs mirror the C++ math; they are teaching diagrams, not
+              a replacement for implementing it yourself.
+            </p>
+            <p>
+              No package installation is needed to read the site. All pages,
+              styles, scripts, and examples are served locally from this
+              repository, with no analytics or third-party assets.
+            </p>
+          </div>
+          <footer class="site-footer">
+            <span>MORPH / LEARN BY MAKING IT VISIBLE</span
+            ><span>One grid. Three experiments. A first-person world.</span>
+          </footer>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

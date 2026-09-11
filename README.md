@@ -3,6 +3,13 @@
 A C++ graphics learning project building toward a Wolfenstein-style raycaster.
 The initial application opens a raylib window and draws "Hello, world!".
 
+## Raycasting tutorials
+
+The [interactive tutorial notebook](docs/index.html) walks through one-ray DDA,
+a camera-plane ray fan, and first-person wall projection. Each lesson includes
+worked math, interactive diagrams, edge cases, and downloadable C++20 examples.
+See the [site guide](docs/README.md) for local preview and GitHub Pages deployment.
+
 ## Build and run
 
 Requires CMake 3.25 or newer, a C compiler, a C++20 compiler, and a native build

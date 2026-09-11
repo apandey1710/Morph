@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Find the exact place a ray enters a wall cell. Build DDA from two boundary times, then watch the traversal happen one crossing at a time."
+    />
+    <meta name="theme-color" content="#233b3d" />
+    <title>One ray · DDA — Morph Field Notes</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/style.css" />
+    <script type="module" src="assets/site.mjs"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="shell">
+      <aside class="sidebar">
+        <a class="brand" href="index.html"
+          ><svg class="mark" viewBox="0 0 40 40" aria-hidden="true">
+            <path
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+              d="M3 33V7l17 13L37 7v26M3 7l17 26L37 7"
+            /></svg
+          >Morph<small>LAB</small></a
+        >
+        <div class="nav-label">The raycasting notebook</div>
+        <nav aria-label="Lessons">
+          <a href="index.html"><span class="nav-number">00</span>Overview</a
+          ><a href="01-single-ray.html" aria-current="page"
+            ><span class="nav-number">01</span>One ray · DDA</a
+          ><a href="02-ray-fan.html"
+            ><span class="nav-number">02</span>A fan of rays</a
+          ><a href="03-wall-strips.html"
+            ><span class="nav-number">03</span>Wall projection</a
+          >
+        </nav>
+        <div class="sidebar-bottom">
+          <div class="tiny-grid" aria-hidden="true">
+            ▪ ▪ ▪ ▪<br />▪ · · ▪<br />▪ · ↗ ▪<br />▪ ▪ ▪ ▪
+          </div>
+          A small world.<br />Built from first principles.<a
+            href="https://github.com/apandey1710/Morph"
+            >Project on GitHub ↗</a
+          >
+        </div>
+      </aside>
+      <main id="main" class="main">
+        <div class="content">
+          <header class="topbar">
+            <span>FIELD NOTES / GRAPHICS PROGRAMMING</span
+            ><span class="status">C++20 · raylib · CPU raycasting</span>
+          </header>
+          <section class="hero">
+            <div class="eyebrow">EXPERIMENT 01 / GRID TRAVERSAL</div>
+            <h1>One ray.<br /><em>The first wall.</em></h1>
+            <p class="lead">
+              Find the exact place a ray enters a wall cell. Build DDA from two
+              boundary times, then watch the traversal happen one crossing at a
+              time.
+            </p>
+            <div class="hero-meta">
+              <span>20–30 minute lesson</span
+              ><span>Prerequisite: an overhead grid</span
+              ><span>Output: a world-space hit</span>
+            </div>
+          </section>
+          <noscript
+            ><p>
+              The lessons and downloads work without JavaScript. Enable it to
+              use the interactive ray labs.
+            </p></noscript
+          >
+          <section
+            class="demo"
+            data-demo="single"
+            aria-label="Interactive single demonstration"
+          >
+            <div class="demo-heading">
+              <span>Ray lab / single</span
+              ><span class="live">Interactive experiment ↗</span>
+            </div>
+            <div class="demo-grid">
+              <div class="map-wrap">
+                <canvas
+                  class="map-canvas"
+                  width="560"
+                  height="560"
+                  role="img"
+                  aria-label="Overhead 8 by 8 map. Player at 2.5, 1.5. Rays stop at their first wall; controls update the view and the text readout."
+                  >The player starts at (2.5, 1.5). Facing east, the first wall
+                  is cell (7, 1), at x = 7.</canvas
+                >
+              </div>
+              <div class="demo-panel">
+                <h3>Trace the next boundary</h3>
+                <p>
+                  Turn the ray, then restart and reveal one grid crossing at a
+                  time. Numbers show the order in which cells are tested.
+                </p>
+                <label class="control"
+                  >Direction<input
+                    name="angle"
+                    type="range"
+                    min="-180"
+                    max="180"
+                    value="0"
+                    step="1"
+                  /><output>0°</output></label
+                >
+                <div class="step-buttons">
+                  <button data-next>Next crossing →</button
+                  ><button data-restart>Restart traversal</button>
+                </div>
+                <div class="step-state" aria-live="polite"></div>
+                <div class="legend">
+                  <span>X-side hit</span><span>Y-side hit</span>
+                </div>
+              </div>
+            </div>
+            <div class="readout" role="status" aria-live="polite"></div>
+            <div class="trace-wrap">
+              <table>
+                <caption class="small">
+                  Complete traversal · revealed rows are highlighted
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Step</th>
+                    <th scope="col">Side</th>
+                    <th scope="col">Cell</th>
+                    <th scope="col">t</th>
+                    <th scope="col">Result</th>
+                  </tr>
+                </thead>
+                <tbody class="trace-body"></tbody>
+              </table>
+            </div>
+          </section>
+          <nav class="toc" aria-label="On this page">
+            <strong>In this lesson</strong><a href="#intuition">01 / The ray</a
+            ><a href="#crossings">02 / DDA math</a
+            ><a href="#implementation">03 / C++</a
+            ><a href="#draw">04 / Draw the hit</a
+            ><a href="#checks">05 / Experiments</a>
+          </nav>
+          <article class="prose">
+            <h2 id="intuition">01 / A ray is a question</h2>
+            <p>
+              Imagine pointing a laser from the player. You want to know which
+              wall it reaches first and exactly where it touches. A ray
+              describes every possible point along that laser, starting at the
+              player and extending forward.
+            </p>
+            <div class="equation">
+              P(t) = O + tD, &nbsp; t ≥ 0<br />x(t) = origin.x + t ×
+              direction.x<br />y(t) = origin.y + t × direction.y
+            </div>
+            <p>
+              <strong>O</strong> is the origin in world units.
+              <strong>D</strong> is the direction vector. <strong>t</strong> is
+              a nonnegative parameter that scales that vector. If D has length
+              1, t is distance in world units. If D is longer or shorter, t is
+              not distance: the traveled length is <code>t × length(D)</code>.
+            </p>
+            <p>
+              For O = (2.5, 1.5) and D = (1, 0), a value of t = 0.5 gives P =
+              (3, 1.5). The ray has reached the right edge of its starting cell.
+              Our first wall is at x = 7, so the eventual hit is (7, 1.5), in
+              cell (7, 1), at t = 4.5.
+            </p>
+            <aside class="callout">
+              <strong>Why not keep adding 0.01?</strong>
+              <p>
+                Fixed-size steps repeatedly sample points inside the same cell.
+                Large steps can skip a thin passage through a wall cell near a
+                corner; small steps do extra work and still approximate the
+                boundary. DDA visits the boundaries themselves, so every step is
+                a meaningful cell crossing.
+              </p>
+            </aside>
+            <h2 id="crossings">02 / Race the next two boundaries</h2>
+            <p>
+              DDA stands for digital differential analysis. In this grid
+              traversal, we keep track of when the ray will next cross a
+              vertical grid line and when it will next cross a horizontal one.
+              Whichever happens first tells us which neighboring cell to
+              inspect.
+            </p>
+            <p>
+              Crossing a vertical line changes the cell's
+              <strong>x index</strong>, so we call it an X-side crossing.
+              Crossing a horizontal line changes its <strong>y index</strong>, a
+              Y-side crossing. The names refer to the changing coordinate, not
+              the visual orientation of the line.
+            </p>
+            <div class="equation">
+              deltaX = |1 / direction.x|<br />deltaY = |1 / direction.y|
+            </div>
+            <p>
+              These are increments in <strong>t</strong>, not automatically
+              world distances. Why the reciprocal? Adjacent vertical grid lines
+              are one world unit apart. From Δx = Δt × direction.x, a change of
+              one cell gives |Δt| = |1 / direction.x|.
+            </p>
+            <p>
+              For the first crossing, use only the remaining fraction of the
+              starting cell. When moving right, the next vertical boundary is at
+              <code>cellX + 1</code>; when moving left, it is at
+              <code>cellX</code>.
+            </p>
+            <p class="code-caption">
+              Formula fragment · the complete implementation handles zero
+              components
+            </p>
+            <pre
+              data-copy
+            ><code class="language-cpp">// Finite, nonzero direction.x assumed in this isolated formula.
+const int stepX = direction.x &lt; 0.0f ? -1 : 1;
+const double gapX = direction.x &lt; 0.0f
+    ? origin.x - cellX
+    : cellX + 1.0 - origin.x;
+const double nextX = gapX * deltaX;</code></pre>
+            <p>
+              Repeat the same calculation for y. After crossing X, advance
+              <code>cellX</code> by <code>stepX</code> and add
+              <code>deltaX</code> to the next-X time. Leave the next-Y time
+              alone. The opposite applies after crossing Y.
+            </p>
+            <h3>A diagonal example, by hand</h3>
+            <p>
+              Use O = (2.5, 1.5) and the unit direction D = (0.8, 0.6). Then
+              deltaX = 1.25 and deltaY ≈ 1.667. The initial half-cell gaps give
+              nextX = 0.625 and nextY ≈ 0.833.
+            </p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Step</th>
+                    <th scope="col">Compare</th>
+                    <th scope="col">Visit</th>
+                    <th scope="col">Result</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1</td>
+                    <td>0.625 &lt; 0.833</td>
+                    <td>X → cell (3, 1)</td>
+                    <td>Empty; nextX becomes 1.875</td>
+                  </tr>
+                  <tr>
+                    <td>2</td>
+                    <td>0.833 &lt; 1.875</td>
+                    <td>Y → cell (3, 2)</td>
+                    <td>Wall; stop at t ≈ 0.833</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              The hit position is (2.5, 1.5) + 0.833… × (0.8, 0.6) =
+              <strong>(3.166…, 2.0)</strong>. You hit the top edge of the wall
+              in row 2. Try a direction near 37° in the lab to see this path.
+            </p>
+            <h2 id="implementation">03 / Return the geometry, not a drawing</h2>
+            <p>
+              Keep traversal independent of rendering. The following complete
+              DDA helper returns the hit cell, crossed side, parameter t, and
+              world-space point. It takes a rectangular map by reference, so C++
+              infers the dimensions. Nonzero cells are solid. The function
+              requires a finite origin inside an empty cell and a finite,
+              nonzero direction; it returns <code>std::nullopt</code> for
+              invalid input, a solid origin, or a ray that exits the map.
+            </p>
+            <p class="code-caption">
+              Complete helper from raycaster.hpp · requires raylib.h, cmath,
+              limits, optional
+            </p>
+            <pre data-copy><code class="language-cpp">enum class Side
+{
+    X, // Crossed a vertical grid line: the cell&#x27;s x index changed.
+    Y  // Crossed a horizontal grid line: the cell&#x27;s y index changed.
+};
+
+struct RayHit
+{
+    int cellX;
+    int cellY;
+    Side side;
+    double t; // Parameter in origin + t * direction, not always ray length.
+    Vector2 position;
+};
+
+// Accept a map by reference so dimensions are inferred, including non-square maps.
+// Empty origin required. Invalid rays, solid origins, and map exits return nullopt.
+template &lt;int Height, int Width&gt;
+std::optional&lt;RayHit&gt; castRay(const int (&amp;map)[Height][Width],
+                              Vector2 origin, Vector2 direction)
+{
+    if (!std::isfinite(origin.x) || !std::isfinite(origin.y) ||
+        !std::isfinite(direction.x) || !std::isfinite(direction.y) ||
+        (direction.x == 0.0f &amp;&amp; direction.y == 0.0f) ||
+        origin.x &lt; 0.0f || origin.x &gt;= Width ||
+        origin.y &lt; 0.0f || origin.y &gt;= Height)
+    {
+        return std::nullopt;
+    }
+
+    int cellX = static_cast&lt;int&gt;(std::floor(origin.x));
+    int cellY = static_cast&lt;int&gt;(std::floor(origin.y));
+    if (map[cellY][cellX] != 0)
+    {
+        return std::nullopt;
+    }
+
+    const double infinity = std::numeric_limits&lt;double&gt;::infinity();
+    const int stepX = direction.x &lt; 0.0f ? -1 : 1;
+    const int stepY = direction.y &lt; 0.0f ? -1 : 1;
+    const double deltaX = direction.x == 0.0f ? infinity :
+        std::abs(1.0 / direction.x);
+    const double deltaY = direction.y == 0.0f ? infinity :
+        std::abs(1.0 / direction.y);
+
+    // Guard zero components explicitly: 0 * infinity would produce NaN.
+    double nextX = direction.x == 0.0f ? infinity :
+        (direction.x &lt; 0.0f ? origin.x - cellX : cellX + 1.0 - origin.x) * deltaX;
+    double nextY = direction.y == 0.0f ? infinity :
+        (direction.y &lt; 0.0f ? origin.y - cellY : cellY + 1.0 - origin.y) * deltaY;
+
+    // Each step changes one cell index monotonically; this bound covers map exit.
+    for (int crossing = 0; crossing &lt; Width + Height; ++crossing)
+    {
+        double t;
+        Side side;
+        if (nextX &lt;= nextY) // Exact corner ties deliberately visit X first.
+        {
+            t = nextX;
+            nextX += deltaX;
+            cellX += stepX;
+            side = Side::X;
+        }
+        else
+        {
+            t = nextY;
+            nextY += deltaY;
+            cellY += stepY;
+            side = Side::Y;
+        }
+
+        if (cellX &lt; 0 || cellX &gt;= Width || cellY &lt; 0 || cellY &gt;= Height)
+        {
+            return std::nullopt;
+        }
+        if (map[cellY][cellX] != 0)
+        {
+            return RayHit{cellX, cellY, side, t,
+                Vector2{static_cast&lt;float&gt;(origin.x + t * direction.x),
+                        static_cast&lt;float&gt;(origin.y + t * direction.y)}};
+        }
+    }
+    return std::nullopt;
+}</code></pre>
+            <h3>Edge cases are part of the algorithm</h3>
+            <ul>
+              <li>
+                <strong>A zero component:</strong> an exactly horizontal ray
+                never crosses a horizontal boundary. Set its next-Y time to
+                infinity. Handle that branch explicitly: multiplying a zero gap
+                by infinity produces NaN, which breaks comparisons.
+              </li>
+              <li>
+                <strong>Map boundaries:</strong> check the new cell before
+                indexing. Even a bordered map should not be trusted to prevent
+                invalid memory access.
+              </li>
+              <li>
+                <strong>Starting on a grid line:</strong> moving into the cell
+                on the negative side can give t = 0. That is a valid boundary
+                hit, not necessarily a bug.
+              </li>
+              <li>
+                <strong>Corner ties:</strong> this implementation deliberately
+                visits X first when nextX equals nextY. If that cell is empty, Y
+                is visited at the same t. It does not inspect the other
+                side-adjacent cell. This deterministic visual convention is not
+                a conservative collision rule; a collision system may need to
+                inspect both neighbors.
+              </li>
+              <li>
+                <strong>Near ties:</strong> floating-point rounding can decide
+                which side wins. Avoid adding a broad epsilon that changes which
+                walls are hit. A stricter corner policy can be a later
+                experiment.
+              </li>
+              <li>
+                <strong>Termination:</strong> each cell index moves only in one
+                direction. Width + Height crossings are enough to hit a wall or
+                leave this finite map.
+              </li>
+            </ul>
+            <h2 id="draw">04 / Put the hit back on the map</h2>
+            <p>
+              Now convert the world hit into screen pixels. The same conversion
+              must be used for the player and the hit. These fragments use your
+              existing <code>offsetX</code>, <code>offsetY</code>, and
+              <code>pixelsPerCell</code> constants.
+            </p>
+            <p class="code-caption">
+              Integration fragments · place the helper outside main and the
+              drawing code inside the frame
+            </p>
+            <pre
+              data-copy
+            ><code class="language-cpp">Vector2 toScreen(Vector2 world)
+{
+    return Vector2{
+        offsetX + world.x * pixelsPerCell,
+        offsetY + world.y * pixelsPerCell
+    };
+}
+
+// Inside the drawing loop, after all map cells have been drawn:
+const Vector2 direction{1.0f, 0.0f};
+const auto hit = castRay(level, playerPosition, direction);
+if (hit)
+{
+    const Color color = hit-&gt;side == Side::X ? SKYBLUE : ORANGE;
+    DrawLineV(toScreen(playerPosition), toScreen(hit-&gt;position), color);
+    DrawCircleV(toScreen(hit-&gt;position), 3.0f, color);
+}
+DrawCircleV(toScreen(playerPosition), 5.0f, WHITE);</code></pre>
+            <p>
+              The line now ends at a wall because the level geometry chose its
+              endpoint. Its pixel length is a consequence of the hit distance
+              and drawing scale, rather than an arbitrary visual length.
+            </p>
+            <h2 id="checks">05 / Make the result falsifiable</h2>
+            <ol>
+              <li>
+                Face east: expect cell (7, 1), an X-side hit at (7, 1.5), and t
+                = 4.5.
+              </li>
+              <li>
+                Face north with D = (0, −1): expect cell (2, 0), a Y-side hit at
+                (2.5, 1), and t = 0.5.
+              </li>
+              <li>
+                Change D from (1, 0) to (2, 0). The hit point should stay the
+                same while t halves to 2.25. This reveals why t is not always
+                length.
+              </li>
+              <li>
+                Remove a border wall in a temporary map. A ray through the
+                opening should return no hit without indexing outside the map.
+              </li>
+              <li>
+                Change the drawing scale. World hit coordinates must stay the
+                same.
+              </li>
+            </ol>
+            <aside class="callout">
+              <strong>Checkpoint</strong>
+              <p>
+                You are ready for a camera when one ray reliably stops at the
+                first wall, horizontal and vertical rays work, and changing
+                direction magnitude does not change the hit point.
+              </p>
+            </aside>
+            <h2 id="build">Build this checkpoint</h2>
+            <p>
+              The download contains three standalone C++20 programs and two
+              shared headers. They use the same 8 × 8 map and player position as
+              Morph. Each program owns its own <code>main()</code>; build one at
+              a time. The examples are tutorial files, not changes to the
+              engine.
+            </p>
+            <div class="download-links">
+              <a href="examples/morph-tutorials.zip" download
+                >↓ All examples (.zip)</a
+              ><a href="examples/01-single-ray.cpp" download>Lesson 01 source</a
+              ><a href="examples/raycaster.hpp" download>DDA header</a
+              ><a href="examples/scene.hpp" download>Drawing helpers</a>
+            </div>
+            <p>
+              Extract the archive into an empty directory, then configure it
+              with CMake. The example build downloads the same pinned raylib
+              version as Morph; it needs the same compiler and platform
+              development libraries.
+            </p>
+            <pre><code>cmake -S . -B build
+cmake --build build --target tutorial_01
+./build/tutorial_01</code></pre>
+            <p>
+              For multi-configuration generators, add
+              <code>--config Debug</code> to the build command and run the
+              executable under <code>build/Debug/</code> (with
+              <code>.exe</code> on Windows). Use Left / Right to rotate and
+              Escape to exit.
+            </p>
+          </article>
+          <nav class="lesson-footer" aria-label="Adjacent lessons">
+            <a href="index.html">← Overview</a
+            ><a href="02-ray-fan.html">Next: A fan of rays →</a>
+          </nav>
+          <footer class="site-footer">
+            <span>MORPH / LEARN BY MAKING IT VISIBLE</span
+            ><span>One grid. Three experiments. A first-person world.</span>
+          </footer>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
