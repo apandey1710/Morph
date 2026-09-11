@@ -1,0 +1,12 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+
+# Place opening braces on their own lines for functions, classes, and blocks.
+BreakBeforeBraces: Allman
+
+# Keep short definitions and control-flow blocks from collapsing onto one line.
+AllowShortFunctionsOnASingleLine: None
+AllowShortBlocksOnASingleLine: Never
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortLambdasOnASingleLine: None
