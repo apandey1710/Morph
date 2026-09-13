@@ -17,8 +17,8 @@ FetchContent_MakeAvailable(raylib)
 
 add_subdirectory(libs/math)
 add_subdirectory(libs/util)
+add_subdirectory(libs/graphics)
 
 add_executable(morph src/main.cpp)
 target_compile_features(morph PRIVATE cxx_std_20)
-target_link_libraries(morph PRIVATE raylib morph::math morph::util)
-
+target_link_libraries(morph PRIVATE raylib morph::math morph::util morph::graphics)

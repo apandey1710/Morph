@@ -87,15 +87,19 @@ libs/math/include/morph/math Public math headers
 libs/math/src                Math implementation stubs
 libs/util/include/morph/util Public utility headers
 libs/util/src                Utility implementation stubs
+libs/graphics/include/morph/graphics Public graphics headers
+libs/graphics/src            Graphics implementation stubs
 ```
 
-- `morph`: executable; links raylib and both internal libraries.
+- `morph`: executable; links raylib and all three internal libraries.
 - `morph::math`: alias for the `morph_math` static library.
 - `morph::util`: alias for the `morph_util` static library.
+- `morph::graphics`: alias for the `morph_graphics` static library.
 
-Both internal libraries are intentionally empty and independent of raylib.
+All three internal libraries are intentionally empty and independent of raylib.
 Their public include paths propagate to targets that link them, allowing
-`#include <morph/math/math.hpp>` and `#include <morph/util/util.hpp>` without
+`#include <morph/math/math.hpp>`, `#include <morph/util/util.hpp>`, and
+`#include <morph/graphics/graphics.hpp>` without
 relative paths. List new implementation files explicitly in the corresponding
 `CMakeLists.txt` as the project grows.
 
