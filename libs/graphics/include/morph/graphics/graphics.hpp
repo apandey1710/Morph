@@ -1,6 +1,3 @@
 #pragma once
 
-namespace morph::graphics
-{
-// Future graphics declarations belong here.
-}
+#include <morph/graphics/raycast.h>

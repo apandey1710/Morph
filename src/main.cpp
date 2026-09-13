@@ -1,3 +1,5 @@
+#include <morph/graphics/raycast.h>
+
 #include <raylib.h>
 
 constexpr unsigned int mapWidth = 8;
@@ -7,11 +9,6 @@ constexpr int offsetX = 24;
 constexpr int offsetY = 24;
 
 constexpr Vector2 playerPosition{2.5f, 1.5f};
-constexpr Vector2 playerScreen
-{
-    offsetX + playerPosition.x * pixelsPerCell,
-    offsetY + playerPosition.y * pixelsPerCell
-};
 
 constexpr int level[mapHeight][mapWidth] = {
     {1, 1, 1, 1, 1, 1, 1, 1},
@@ -23,6 +20,16 @@ constexpr int level[mapHeight][mapWidth] = {
     {1, 0, 0, 0, 0, 0, 0, 1},
     {1, 1, 1, 1, 1, 1, 1, 1},
 };
+
+Vector2 toScreen(Vector2 world)
+{
+    return Vector2 {
+        offsetX + world.x * pixelsPerCell,
+        offsetY + world.y * pixelsPerCell
+    };
+}
+
+
 
 int main()
 {
@@ -36,35 +43,23 @@ int main()
     }
 
     SetTargetFPS(60);
-
     while (!WindowShouldClose())
     {
         BeginDrawing();
         ClearBackground(RAYWHITE);
 
-        for (auto y = 0; y < mapWidth; y++)
+        constexpr Vector2 direction{0.0f, 1.0f};
+        const auto hit = morph::graphics::castRay(level, playerPosition, direction);
+        if (hit)
         {
-            for (auto x = 0; x < mapHeight; x++)
-            {
-                const Color color = level[y][x] == 0 ? LIGHTGRAY : DARKGRAY;
-                DrawRectangle(
-                    offsetX + x * pixelsPerCell,
-                    offsetY + y * pixelsPerCell,
-                    pixelsPerCell - 1,
-                    pixelsPerCell - 1,
-                    color);
-                DrawCircleV(playerScreen, 5.0f, BLUE);
-                DrawLineV(
-                    playerScreen,
-                    Vector2{playerScreen.x + 1.9 * pixelsPerCell, playerScreen.y},
-                    RED
-                    );
-            }
+            const Color color = hit->side == morph::graphics::Side::X ? SKYBLUE : ORANGE;
+            DrawLineV(toScreen(playerPosition), toScreen(hit->position), color);
+            DrawCircleV(toScreen(hit->position), 3.0f, color);
         }
+        DrawCircleV(toScreen(playerPosition), 5.0f, RED);
         EndDrawing();
     }
 
     CloseWindow();
     return 0;
 }
-
