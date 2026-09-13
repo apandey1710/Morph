@@ -8,7 +8,7 @@ constexpr unsigned int pixelsPerCell = 48;
 constexpr int offsetX = 24;
 constexpr int offsetY = 24;
 
-constexpr Vector2 playerPosition{2.5f, 1.5f};
+constexpr Vector2 playerPosition{2.7f, 1.3f};
 
 constexpr int level[mapHeight][mapWidth] = {
     {1, 1, 1, 1, 1, 1, 1, 1},
@@ -48,7 +48,24 @@ int main()
         BeginDrawing();
         ClearBackground(RAYWHITE);
 
-        constexpr Vector2 direction{0.0f, 1.0f};
+        for (auto y = 0; y < mapWidth; y++)
+        {
+            for (auto x = 0; x < mapHeight; x++)
+            {
+                const Color color = level[y][x] == 0 ? LIGHTGRAY : DARKGRAY;
+                DrawRectangle(
+                    offsetX + x * pixelsPerCell,
+                    offsetY + y * pixelsPerCell,
+                    pixelsPerCell - 1,
+                    pixelsPerCell - 1,
+                    color);
+                Vector2 playerScreen  = toScreen(playerPosition);
+                DrawCircleV(playerScreen, 5.0f, BLUE);
+            }
+        }
+
+        constexpr Vector2 direction = {2.0f, 0.64f};
+
         const auto hit = morph::graphics::castRay(level, playerPosition, direction);
         if (hit)
         {
@@ -56,7 +73,7 @@ int main()
             DrawLineV(toScreen(playerPosition), toScreen(hit->position), color);
             DrawCircleV(toScreen(hit->position), 3.0f, color);
         }
-        DrawCircleV(toScreen(playerPosition), 5.0f, RED);
+
         EndDrawing();
     }
 
