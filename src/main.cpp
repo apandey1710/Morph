@@ -1,4 +1,4 @@
-#include <morph/graphics/raycast.h>
+#include <raycast.h>
 
 #include <raylib.h>
 

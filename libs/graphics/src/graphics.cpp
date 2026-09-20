@@ -1,4 +1,4 @@
-#include <morph/graphics/graphics.hpp>
+#include <graphics.hpp>
 
 namespace morph::graphics
 {

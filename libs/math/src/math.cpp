@@ -1,4 +1,4 @@
-#include <morph/math/math.hpp>
+#include <math.hpp>
 
 namespace morph::math
 {

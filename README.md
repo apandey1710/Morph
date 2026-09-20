@@ -83,23 +83,28 @@ player from moving through it.
 
 ```text
 src/main.cpp                 Application entry point and drawing loop
-libs/math/include/morph/math Public math headers
+libs/math/include Public math headers
 libs/math/src                Math implementation stubs
-libs/util/include/morph/util Public utility headers
+libs/util/include Public utility headers
 libs/util/src                Utility implementation stubs
-libs/graphics/include/morph/graphics Public graphics headers
+libs/graphics/include Public graphics headers
 libs/graphics/src            Graphics implementation stubs
+libs/io/include     Public I/O headers
+libs/io/src                  I/O implementation stubs
 ```
 
-- `morph`: executable; links raylib and all three internal libraries.
+- `morph`: executable; links raylib and all four internal libraries.
 - `morph::math`: alias for the `morph_math` static library.
 - `morph::util`: alias for the `morph_util` static library.
 - `morph::graphics`: alias for the `morph_graphics` static library.
+- `morph::io`: alias for the `morph_io` static library; a dependency-free stub
+  for file I/O, separate from map encoding and rendering.
 
-All three internal libraries are intentionally empty and independent of raylib.
+The math, utility, and I/O libraries are intentionally empty and independent of
+raylib. The graphics library depends on raylib.
 Their public include paths propagate to targets that link them, allowing
-`#include <morph/math/math.hpp>`, `#include <morph/util/util.hpp>`, and
-`#include <morph/graphics/graphics.hpp>` without
+`#include <math.hpp>`, `#include <util.hpp>`,
+`#include <graphics.hpp>`, and `#include <io.hpp>` without
 relative paths. List new implementation files explicitly in the corresponding
 `CMakeLists.txt` as the project grows.
 
