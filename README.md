@@ -3,12 +3,12 @@
 A C++ graphics learning project building toward a Wolfenstein-style raycaster.
 The initial application opens a raylib window and draws "Hello, world!".
 
-## Raycasting tutorials
+## C++ testing tutorial
 
-The [interactive tutorial notebook](docs/index.html) walks through one-ray DDA,
-a camera-plane ray fan, and first-person wall projection. Each lesson includes
-worked math, interactive diagrams, edge cases, and downloadable C++20 examples.
-See the [site guide](docs/README.md) for local preview and GitHub Pages deployment.
+The [testing notebook](docs/index.html) teaches Catch2 assertions, CMake/CTest
+integration, and isolated tests for `readFile` and `writeFile`. It includes an
+interactive assertion lab and a standalone downloadable C++20 checkpoint.
+See the [site guide](docs/README.md) for preview, validation, and publishing.
 
 ## Build and run
 

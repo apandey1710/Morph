@@ -20,6 +20,11 @@ add_subdirectory(libs/util)
 add_subdirectory(libs/graphics)
 add_subdirectory(libs/io)
 
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+endif()
+
 add_executable(morph src/main.cpp)
-target_compile_features(morph PRIVATE cxx_std_20)
 target_link_libraries(morph PRIVATE raylib morph::math morph::util morph::graphics morph::io)
+
+add_test(NAME morph_io_tests COMMAND morph_io_tests)

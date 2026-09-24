@@ -2,7 +2,8 @@
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
+import sys
 
 root = Path(__file__).resolve().parents[1]
 
@@ -39,8 +40,12 @@ for path, page in pages.items():
         checked += 1
 examples = root / 'examples'
 expected = {p.name for p in examples.iterdir()
-            if p.suffix in ('.cpp', '.hpp') or p.name == 'CMakeLists.txt'}
-with ZipFile(examples / 'morph-tutorials.zip') as archive:
+            if p.suffix in ('.cpp', '.hpp', '.md') or p.name == 'CMakeLists.txt'}
+if '--pack' in sys.argv:
+    with ZipFile(examples / 'morph-testing.zip', 'w', ZIP_DEFLATED) as archive:
+        for name in sorted(expected):
+            archive.write(examples / name, name)
+with ZipFile(examples / 'morph-testing.zip') as archive:
     assert set(archive.namelist()) == expected
     for name in expected:
         assert archive.read(name) == (examples / name).read_bytes(), f'Stale archive: {name}'

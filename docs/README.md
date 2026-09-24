@@ -1,10 +1,10 @@
-# Morph tutorial site
+# Morph testing notebook
 
-A dependency-free, pre-rendered GitHub Pages notebook. Start at `index.html`.
-The three lessons cover DDA, camera-plane sampling, and wall projection.
-The engine source is independent of these teaching examples.
+A static four-page course: overview, Catch2/CTest setup, assertions, and real
+file IO. The raycasting course has been replaced, including its examples.
+The engine and root test setup are independent of this tutorial.
 
-## Preview locally
+## Preview
 
 From the repository root:
 
@@ -12,58 +12,43 @@ From the repository root:
 python3 -m http.server 4173 --directory docs
 ```
 
-Open http://localhost:4173. No Node packages, site generator, or external fonts
-are required. JavaScript powers only the interactive labs and copy buttons;
-lesson text, navigation, and downloads remain available without it.
+Open http://localhost:4173. No site build, external fonts, or frontend packages
+are needed. Lessons and downloads work without JavaScript; the assertion lab
+is a labeled JavaScript simulation, not a C++ compiler.
 
-## Publish with GitHub Pages
-
-In the repository's Settings → Pages, set the build and deployment source to
-**GitHub Actions**. Commit and push the site and the Pages workflow to `main`,
-or run **Publish tutorial notebook** manually from the Actions tab after the
-workflow is on GitHub. The workflow uploads `docs` and deploys it to Pages.
-
-The expected project-site address is https://apandey1710.github.io/Morph/.
-This is the configured repository's expected address, not a claim that the
-site has already been deployed. All internal links are relative so the site
-also works below the `/Morph/` project prefix.
-
-Official setup reference:
-https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
-
-## Editing
-
-Edit the HTML pages directly; there is no generation step for deployment.
-Shared styles are in `assets/style.css`. The pure browser math is in
-`assets/raycast.mjs`; drawing and controls are in `assets/site.mjs`.
-The examples follow the project's C++20, raylib, and Allman brace conventions.
-Keep displayed snippets synchronized with the downloadable examples.
-
-After changing example files, rebuild the downloadable archive from the
-repository root:
-
-```sh
-python3 -c 'from pathlib import Path; from zipfile import ZipFile, ZIP_DEFLATED; p=Path("docs/examples"); z=ZipFile(p/"morph-tutorials.zip", "w", ZIP_DEFLATED); [z.write(f, f.name) for f in sorted(p.iterdir()) if f.suffix in (".cpp", ".hpp") or f.name == "CMakeLists.txt"]; z.close()'
-```
-
-## Check the math and examples
+## Verify
 
 ```sh
 python3 docs/tests/check_site.py
-node docs/tests/raycast.test.mjs
-cmake -S docs/examples -B /tmp/morph-tutorial-build
-cmake --build /tmp/morph-tutorial-build --parallel 2
-c++ -std=c++20 -I/tmp/morph-tutorial-build/_deps/raylib-src/src \
-    docs/tests/raycaster.cpp -o /tmp/morph-dda-test
-/tmp/morph-dda-test
+cmake -S docs/examples -B build-tutorial -DCMAKE_BUILD_TYPE=Debug
+cmake --build build-tutorial --parallel 2
+ctest --test-dir build-tutorial --output-on-failure
+ctest --test-dir build-tutorial --parallel 4 --output-on-failure
 ```
 
-The C++ tests need raylib's header but do not open a window. Each example
-executable supports Left / Right to rotate. Lesson 3 adds F to compare camera
-depth with the intentionally incorrect ray-length projection.
+First configure fetches pinned Catch2 3.8.1. Multi-configuration generators
+need --config Debug for the build and -C Debug for CTest. Expect eight cases.
+Try all assertion-lab choices, copy code, navigate with the keyboard, download
+the ZIP, and check a narrow mobile viewport. The corrupted payload should pass
+a size-only assertion but fail equality.
 
-For manual browser checks, visit all four pages, rotate each lab, change FOV
-and ray count, step and restart the single-ray traversal, and toggle the
-projection error. Use the flat-wall preset: the south wall should be flat with camera
-depth and bowed with ray length. Also inspect at a narrow mobile width, use
-Tab to reach controls, follow lesson links, and download the examples archive.
+## Edit
+
+Edit the HTML directly. Shared presentation lives in assets/style.css and
+browser interactions in assets/site.mjs. Keep snippets synchronized with the
+files in examples/. Rebuild the archive after editing examples:
+
+```sh
+python3 docs/tests/check_site.py --pack
+```
+
+The sample IO implementation is a documented snapshot; it deliberately retains
+the current writer's unchecked write/close limitation. The tutorial does not
+install Catch2 into the engine or modify the production API.
+
+## Publish
+
+The existing .github/workflows/pages.yml uploads docs on a push to main or a
+manual run of “Publish tutorial notebook”. In repository Settings → Pages,
+use GitHub Actions as the source. Internal links remain relative for project
+subpaths. Editing these files locally does not deploy the site.

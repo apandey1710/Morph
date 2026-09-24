@@ -1,0 +1,141 @@
+<!doctype html>
+
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Replace manual exception bookkeeping with clear expectations. Learn when to stop, when to continue, and how to make a failure useful."><meta name="theme-color" content="#233b3d"><title>Write useful assertions — Morph Testing Notebook</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/style.css"><script type="module" src="assets/site.mjs"></script>
+</head>
+
+<body><a class="skip" href="#main">Skip to content</a>
+<div class="shell">
+<aside class="sidebar"><a class="brand" href="index.html">Morph <small>LAB</small></a>
+<div class="nav-label">The testing notebook
+</div>
+<nav aria-label="Lessons"><a href="index.html"><span class="nav-number">00</span>Overview</a><a href="01-catch2-ctest.html"><span class="nav-number">01</span>Wire up the tools</a><a href="02-assertions.html" aria-current="page"><span class="nav-number">02</span>Write useful assertions</a><a href="03-file-io.html"><span class="nav-number">03</span>Test real file IO</a>
+</nav>
+<div class="sidebar-bottom">Small tests.<br>Specific promises.<a href="examples/morph-testing.zip" download>Download the checkpoint ↓</a><a href="https://github.com/apandey1710/Morph">Project on GitHub ↗</a>
+</div>
+</aside>
+<main id="main" class="main">
+<div class="content">
+<header class="topbar"><span>FIELD NOTES / SOFTWARE TESTING</span><span class="status">C++20 · Catch2 · CTest</span>
+</header>
+<section class="hero">
+<div class="eyebrow">MORPH / LESSON 02
+</div>
+<h1>A passing test<br><em>should mean something.</em>
+</h1>
+<p class="lead">Replace manual exception bookkeeping with clear expectations. Learn when to stop, when to continue, and how to make a failure useful.
+</p>
+<div class="hero-meta"><span>Real project examples</span><span>Runnable C++ checkpoint</span><span>No custom test runner</span>
+</div>
+</section>
+<noscript>
+<p>All lessons and downloads work without JavaScript. The assertion lab and copy buttons require it.
+</p>
+</noscript>
+<div class="prose">
+<h2 id="arrange">Arrange → act → assert
+</h2>
+<p>Arrange the starting state. Act by calling the behavior under test. Assert something a caller cares about. A name such as “writeFile truncates a longer file” states the promise; “test 4” does not.
+</p>
+<pre data-copy><code>// Fragment: directory is a TempDirectory from lesson 3.
+const auto path = directory.file(&quot;missing.bin&quot;);      // Arrange
+REQUIRE_FALSE(std::filesystem::exists(path));
+REQUIRE_THROWS_AS(morph::io::readFile(path),           // Act + assert
+                  std::runtime_error);</code>
+</pre>
+<p>No local try/catch is needed. An exception is the expected result of this API call, so the assertion names its type. Avoid requiring exact error wording unless the wording itself is part of the API contract.
+</p>
+<h2 id="assertions">Stop only when continuing is unsafe
+</h2>
+<div class="table-wrap">
+<table>
+<tr><th>Assertion</th><th>Use it for</th>
+</tr>
+<tr><td><code>REQUIRE(expression)</code></td><td>A prerequisite: stop this case if it fails.</td>
+</tr>
+<tr><td><code>CHECK(expression)</code></td><td>An independent observation: report failure and continue.</td>
+</tr>
+<tr><td><code>REQUIRE_THROWS_AS(call, Type)</code></td><td>A documented exception type.</td>
+</tr>
+<tr><td><code>REQUIRE_NOTHROW(call)</code></td><td>A meaningful promise that the call succeeds.</td>
+</tr>
+</table>
+</div>
+<pre data-copy><code>// Fragment: actual is a byte vector returned by the reader.
+REQUIRE(actual.size() == 6);  // Guards the indexing below.
+CHECK(actual[0] == std::byte{0x00});
+CHECK(actual[5] == std::byte{0xFF});</code>
+</pre>
+<p>Using CHECK for the size would permit invalid indexing after a failed prerequisite. But for complete byte preservation, prefer <code>REQUIRE(actual == expected)</code>: it checks length and every element without indexing.
+</p>
+<p>Unexpected exceptions are reported by the framework. Wrapping every case in a catch-all can hide failures, especially if the catch prints a message and returns normally. Plain <code>assert</code> is also a poor default for a suite because builds with <code>NDEBUG</code> can remove it.
+</p>
+<h2 id="lab">A green result can be weak evidence
+</h2>
+</div>
+<section class="demo" aria-labelledby="lab-title">
+<div class="demo-heading"><span>Assertion lab</span><span class="live">Interactive model</span>
+</div>
+<div class="demo-panel">
+<h2 id="lab-title">Can your assertion catch the bug?
+</h2>
+<p>This JavaScript model compares byte arrays. It does not compile C++ or run Catch2. Predict the result, then change the observation or the assertion.
+</p><label for="scenario">Observed file contents</label><select id="scenario"><option value="correct">Correct: 00 0A 0D 7F 80 FF</option><option value="corrupt">One byte corrupted: 00 0A 0D 7F 80 00</option><option value="short">Truncated: 00 0A 0D</option><option value="extra">Stale trailing byte: 00 0A 0D 7F 80 FF 42</option></select><label for="assertion">Expectation</label><select id="assertion"><option value="equal">Exact byte equality</option><option value="size">Size is six bytes</option><option value="nonempty">File is not empty</option></select>
+<div class="byte-row"><span>Expected</span><code>00 0A 0D 7F 80 FF</code>
+</div>
+<div class="byte-row"><span>Observed</span><code id="observed">00 0A 0D 7F 80 FF</code>
+</div>
+</div>
+<div id="lab-result" class="readout" role="status" aria-live="polite">PASS — the bytes match exactly.
+</div>
+</section>
+<div class="prose">
+<p>Select the corrupted payload and check only its size. The test passes because corruption did not change the length. Switch to exact equality to detect it. “File exists” and “file is nonempty” are useful prerequisites, but neither proves correctness.
+</p>
+<h2 id="sections">Independent cases, shared setup
+</h2>
+<pre data-copy><code>// Fragment from the full IO test file; seed and TempDirectory are helpers.
+TEST_CASE(&quot;writeFile creates and truncates empty files&quot;, &quot;[io][write]&quot;)
+{
+    TempDirectory directory;
+    const auto path = directory.file(&quot;empty.bin&quot;);
+    SECTION(&quot;new file&quot;) {}
+    SECTION(&quot;existing file&quot;) { seed(path, payload()); }
+
+    std::vector&lt;std::byte&gt; empty;
+    morph::io::writeFile(path, empty);
+    REQUIRE(std::filesystem::exists(path));
+    CHECK(std::filesystem::file_size(path) == 0);
+}</code>
+</pre>
+<p>For these two sibling SECTIONs, Catch2 reruns the test case for each path. The setup is recreated; the second section does not inherit a file from the first. Both paths share the assertions after the sections. CTest discovery lists the TEST_CASE once, not each section separately.
+</p>
+<p>Use separate cases for distinct promises. Use sections sparingly when two starting states genuinely share the same action and expectation. Tags such as <code>[read]</code> and <code>[write]</code> help filter within the executable.
+</p>
+<h2>Read a failure as evidence
+</h2>
+<pre data-copy><code>// Illustrative diagnostic, not captured output:
+writeFile truncates a longer file
+io_tests.cpp:123: FAILED:
+  CHECK( std::filesystem::file_size(path) == 1 )
+with expansion:
+  6 == 1</code>
+</pre>
+<p>The observed file has six bytes after a one-byte write. That points toward retained trailing data. It does not justify changing the expectation to six: the expected size comes from the overwrite contract, not the implementation’s current behavior.
+</p>
+<h2>Try it
+</h2>
+<p>In a disposable copy of the checkpoint, change the writer to open with <code>std::ios::binary | std::ios::app</code>. Build and run. The new-file test may still pass; the shorter-overwrite test should fail. Restore the writer afterward. Deliberately introducing a bug to assess your tests is called mutation testing.
+</p>
+<p class="small">Reference: <a href="https://github.com/catchorg/Catch2/blob/v3.8.1/docs/assertions.md">Catch2 assertion semantics</a>.
+</p>
+</div>
+<nav class="lesson-footer" aria-label="Continue learning"><a href="01-catch2-ctest.html">← Wire up the tools</a><a href="03-file-io.html">Test real file IO →</a>
+</nav>
+<footer class="site-footer"><span>MORPH / LEARN BY CHECKING YOUR ASSUMPTIONS</span><span>One library. Eight cases. Clear expectations.</span>
+</footer>
+</div>
+</main>
+</div>
+</body>
+</html>

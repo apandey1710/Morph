@@ -1,291 +1,115 @@
 <!doctype html>
+
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="description"
-      content="Build a viewable level from an ordinary grid. Three hands-on lessons take you from a single wall hit to a first-person renderer you can explain."
-    />
-    <meta name="theme-color" content="#233b3d" />
-    <title>A small world, built from rays — Morph Field Notes</title>
-    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="assets/style.css" />
-    <script type="module" src="assets/site.mjs"></script>
-  </head>
-  <body>
-    <a class="skip" href="#main">Skip to content</a>
-    <div class="shell">
-      <aside class="sidebar">
-        <a class="brand" href="index.html"
-          ><svg class="mark" viewBox="0 0 40 40" aria-hidden="true">
-            <path
-              fill="none"
-              stroke="currentColor"
-              stroke-width="3"
-              d="M3 33V7l17 13L37 7v26M3 7l17 26L37 7"
-            /></svg
-          >Morph<small>LAB</small></a
-        >
-        <div class="nav-label">The raycasting notebook</div>
-        <nav aria-label="Lessons">
-          <a href="index.html" aria-current="page"
-            ><span class="nav-number">00</span>Overview</a
-          ><a href="01-single-ray.html"
-            ><span class="nav-number">01</span>One ray · DDA</a
-          ><a href="02-ray-fan.html"
-            ><span class="nav-number">02</span>A fan of rays</a
-          ><a href="03-wall-strips.html"
-            ><span class="nav-number">03</span>Wall projection</a
-          >
-        </nav>
-        <div class="sidebar-bottom">
-          <div class="tiny-grid" aria-hidden="true">
-            ▪ ▪ ▪ ▪<br />▪ · · ▪<br />▪ · ↗ ▪<br />▪ ▪ ▪ ▪
-          </div>
-          A small world.<br />Built from first principles.<a
-            href="https://github.com/apandey1710/Morph"
-            >Project on GitHub ↗</a
-          >
-        </div>
-      </aside>
-      <main id="main" class="main">
-        <div class="content">
-          <header class="topbar">
-            <span>FIELD NOTES / GRAPHICS PROGRAMMING</span
-            ><span class="status">C++20 · raylib · CPU raycasting</span>
-          </header>
-          <section class="hero">
-            <div class="eyebrow">MORPH / AN INTERACTIVE RAYCASTING COURSE</div>
-            <h1>A small world.<br /><em>Built from rays.</em></h1>
-            <p class="lead">
-              Build a viewable level from an ordinary grid. Three hands-on
-              lessons take you from a single wall hit to a first-person renderer
-              you can explain.
-            </p>
-            <div class="hero-meta">
-              <span>03 detailed lessons</span><span>Interactive diagrams</span
-              ><span>Runnable C++ checkpoints</span>
-            </div>
-          </section>
-          <noscript
-            ><p>
-              The lessons and downloads work without JavaScript. Enable it to
-              use the interactive ray labs.
-            </p></noscript
-          >
-          <section
-            class="demo"
-            data-demo="fan"
-            aria-label="Interactive fan demonstration"
-          >
-            <div class="demo-heading">
-              <span>Ray lab / fan</span
-              ><span class="live">Interactive experiment ↗</span>
-            </div>
-            <div class="demo-grid">
-              <div class="map-wrap">
-                <canvas
-                  class="map-canvas"
-                  width="560"
-                  height="560"
-                  role="img"
-                  aria-label="Overhead 8 by 8 map. Player at 2.5, 1.5. Rays stop at their first wall; controls update the view and the text readout."
-                  >The player starts at (2.5, 1.5). Facing east, the first wall
-                  is cell (7, 1), at x = 7.</canvas
-                >
-              </div>
-              <div class="demo-panel">
-                <h3>A camera you can inspect</h3>
-                <p>
-                  Rotate the camera and widen its field of view. The purple
-                  segment is the camera plane; each green ray samples a point
-                  along it.
-                </p>
-                <label class="control"
-                  >Direction<input
-                    name="angle"
-                    type="range"
-                    min="-180"
-                    max="180"
-                    value="0"
-                    step="1"
-                  /><output>0°</output></label
-                ><label class="control"
-                  >Horizontal field of view<input
-                    name="fov"
-                    type="range"
-                    min="30"
-                    max="110"
-                    value="60"
-                    step="1"
-                  /><output>60°</output></label
-                ><label class="control"
-                  >Ray count<input
-                    name="count"
-                    type="range"
-                    min="3"
-                    max="81"
-                    value="31"
-                    step="2"
-                  /><output>31</output></label
-                >
-                <div class="legend">
-                  <span>X-side hit</span><span>Y-side hit</span
-                  ><span>Camera plane</span>
-                </div>
-              </div>
-            </div>
-            <div class="readout" role="status" aria-live="polite"></div>
-          </section>
-          <div class="section-heading">
-            <span>THE PATH</span>
-            <h2>From a cell to a camera.</h2>
-          </div>
-          <div class="cards">
-            <a class="card" href="01-single-ray.html"
-              ><span class="number">EXPERIMENT 01</span>
-              <h3>Find the first wall</h3>
-              <p>
-                Walk through grid boundaries with DDA. Draw the hit point and
-                inspect every cell along the way.
-              </p>
-              <div class="card-bottom">
-                <span>20–30 MIN</span><span>Read lesson →</span>
-              </div></a
-            ><a class="card" href="02-ray-fan.html"
-              ><span class="number">EXPERIMENT 02</span>
-              <h3>Give the camera a view</h3>
-              <p>
-                Build a camera plane, choose a field of view, and make every ray
-                correspond to a screen sample.
-              </p>
-              <div class="card-bottom">
-                <span>15–25 MIN</span><span>Read lesson →</span>
-              </div></a
-            ><a class="card" href="03-wall-strips.html"
-              ><span class="number">EXPERIMENT 03</span>
-              <h3>Make distance visible</h3>
-              <p>
-                Project wall height into pixels. Understand camera depth, remove
-                fisheye distortion, and render a room.
-              </p>
-              <div class="card-bottom">
-                <span>20–30 MIN</span><span>Read lesson →</span>
-              </div></a
-            >
-          </div>
-          <div class="prose">
-            <h2>Your starting point</h2>
-            <p>
-              You have an 8 × 8 grid, a player at (2.5, 1.5), and a raylib
-              drawing loop. A dark cell means wall; an empty cell means
-              traversable space. These lessons add one idea at a time, keeping
-              the overhead map useful all the way to the first-person view.
-            </p>
-            <aside class="callout">
-              <strong>The working model</strong>
-              <p>
-                Keep the raycaster on the CPU: find a wall for each ray,
-                calculate its projected size, then let raylib draw the resulting
-                lines or strips. Full 3D meshes and a custom GPU pipeline would
-                obscure the geometry we are learning.
-              </p>
-            </aside>
-            <h2>Keep these spaces separate</h2>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th scope="col">Space</th>
-                    <th scope="col">Meaning</th>
-                    <th scope="col">Example</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>World</td>
-                    <td>
-                      Floating-point positions on the horizontal plane. One cell
-                      is one unit.
-                    </td>
-                    <td>Player = (2.5, 1.5)</td>
-                  </tr>
-                  <tr>
-                    <td>Map</td>
-                    <td>
-                      Integer indices, row before column. Bounds are checked
-                      before indexing.
-                    </td>
-                    <td>level[y][x]</td>
-                  </tr>
-                  <tr>
-                    <td>Camera</td>
-                    <td>
-                      Forward depth and sideways position relative to the
-                      player.
-                    </td>
-                    <td>depth = dot(hit − player, forward)</td>
-                  </tr>
-                  <tr>
-                    <td>Screen</td>
-                    <td>Pixels from the top-left. +x right, +y down.</td>
-                    <td>pixelX = offsetX + worldX × scale</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <p>
-              On our overhead map, world +x points right and +y points down. A
-              positive rotation is clockwise. Walls have height 1 world unit.
-              For projection, the eye is halfway up the wall, the camera is
-              level, and screen pixels are square.
-            </p>
-            <h2>Before your first ray</h2>
-            <p>
-              In the current map loop, use <code>y &lt; mapHeight</code> and
-              <code>x &lt; mapWidth</code>. The reversed bounds happen to work
-              for a square map, but fail when the dimensions differ. Draw all
-              the cells first, then the rays, then the player once. Drawing the
-              player inside the cell loop repeats the work and lets later cells
-              paint over it.
-            </p>
-            <p>
-              The earlier expression
-              <code>playerScreen.x + 0.75f * pixelsPerCell</code> chooses a
-              visual direction-line endpoint. It does not find a wall. In lesson
-              1, the endpoint comes from an actual grid intersection.
-            </p>
-            <div class="intro-actions">
-              <a class="button" href="01-single-ray.html"
-                >Start with one ray <span>→</span></a
-              ><a
-                class="button secondary"
-                href="examples/morph-tutorials.zip"
-                download
-                >Download the checkpoints ↓</a
-              >
-            </div>
-            <h2>How to use the notebook</h2>
-            <p>
-              First move the controls and predict what will happen. Then work
-              through the equations and focused snippets. Finally, run the
-              complete checkpoint and try the observable checks at the end. The
-              browser labs mirror the C++ math; they are teaching diagrams, not
-              a replacement for implementing it yourself.
-            </p>
-            <p>
-              No package installation is needed to read the site. All pages,
-              styles, scripts, and examples are served locally from this
-              repository, with no analytics or third-party assets.
-            </p>
-          </div>
-          <footer class="site-footer">
-            <span>MORPH / LEARN BY MAKING IT VISIBLE</span
-            ><span>One grid. Three experiments. A first-person world.</span>
-          </footer>
-        </div>
-      </main>
-    </div>
-  </body>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="A practical testing notebook for Morph. Start with a named expectation, connect Catch2 to CTest, then test real file IO without leaving a mess."><meta name="theme-color" content="#233b3d"><title>Overview — Morph Testing Notebook</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/style.css"><script type="module" src="assets/site.mjs"></script>
+</head>
+
+<body><a class="skip" href="#main">Skip to content</a>
+<div class="shell">
+<aside class="sidebar"><a class="brand" href="index.html">Morph <small>LAB</small></a>
+<div class="nav-label">The testing notebook
+</div>
+<nav aria-label="Lessons"><a href="index.html" aria-current="page"><span class="nav-number">00</span>Overview</a><a href="01-catch2-ctest.html"><span class="nav-number">01</span>Wire up the tools</a><a href="02-assertions.html"><span class="nav-number">02</span>Write useful assertions</a><a href="03-file-io.html"><span class="nav-number">03</span>Test real file IO</a>
+</nav>
+<div class="sidebar-bottom">Small tests.<br>Specific promises.<a href="examples/morph-testing.zip" download>Download the checkpoint ↓</a><a href="https://github.com/apandey1710/Morph">Project on GitHub ↗</a>
+</div>
+</aside>
+<main id="main" class="main">
+<div class="content">
+<header class="topbar"><span>FIELD NOTES / SOFTWARE TESTING</span><span class="status">C++20 · Catch2 · CTest</span>
+</header>
+<section class="hero">
+<div class="eyebrow">MORPH / START HERE
+</div>
+<h1>Test behavior.<br><em>Build confidence.</em>
+</h1>
+<p class="lead">A practical testing notebook for Morph. Start with a named expectation, connect Catch2 to CTest, then test real file IO without leaving a mess.
+</p>
+<div class="hero-meta"><span>Real project examples</span><span>Runnable C++ checkpoint</span><span>No custom test runner</span>
+</div>
+</section>
+<noscript>
+<p>All lessons and downloads work without JavaScript. The assertion lab and copy buttons require it.
+</p>
+</noscript>
+<div class="pipeline" aria-label="Testing workflow">
+<div><b>01 / CMake</b><span>Build the executable</span>
+</div><span aria-hidden="true">→</span>
+<div><b>02 / Catch2</b><span>Evaluate expectations</span>
+</div><span aria-hidden="true">→</span>
+<div><b>03 / CTest</b><span>Run and report cases</span>
+</div>
+</div>
+<section class="demo" aria-labelledby="lab-title">
+<div class="demo-heading"><span>Assertion lab</span><span class="live">Interactive model</span>
+</div>
+<div class="demo-panel">
+<h2 id="lab-title">Can your assertion catch the bug?
+</h2>
+<p>This JavaScript model compares byte arrays. It does not compile C++ or run Catch2. Predict the result, then change the observation or the assertion.
+</p><label for="scenario">Observed file contents</label><select id="scenario"><option value="correct">Correct: 00 0A 0D 7F 80 FF</option><option value="corrupt">One byte corrupted: 00 0A 0D 7F 80 00</option><option value="short">Truncated: 00 0A 0D</option><option value="extra">Stale trailing byte: 00 0A 0D 7F 80 FF 42</option></select><label for="assertion">Expectation</label><select id="assertion"><option value="equal">Exact byte equality</option><option value="size">Size is six bytes</option><option value="nonempty">File is not empty</option></select>
+<div class="byte-row"><span>Expected</span><code>00 0A 0D 7F 80 FF</code>
+</div>
+<div class="byte-row"><span>Observed</span><code id="observed">00 0A 0D 7F 80 FF</code>
+</div>
+</div>
+<div id="lab-result" class="readout" role="status" aria-live="polite">PASS — the bytes match exactly.
+</div>
+</section>
+<div class="section-heading"><span>THE PATH</span>
+<h2>From a smoke test to a useful suite.
+</h2>
+</div>
+<div class="cards"><a class="card" href="01-catch2-ctest.html"><span class="number">LESSON 01</span>
+<h3>Wire up the tools
+</h3>
+<p>Understand what CMake, Catch2, and CTest each do. Build your first test before introducing file fixtures.
+</p>
+<div class="card-bottom"><span>15–25 MIN</span><span>Read lesson →</span>
+</div></a><a class="card" href="02-assertions.html"><span class="number">LESSON 02</span>
+<h3>Write useful assertions
+</h3>
+<p>Replace manual exception bookkeeping with clear expectations. Learn when to stop, when to continue, and how to make a failure useful.
+</p>
+<div class="card-bottom"><span>15–25 MIN</span><span>Read lesson →</span>
+</div></a><a class="card" href="03-file-io.html"><span class="number">LESSON 03</span>
+<h3>Test real file IO
+</h3>
+<p>Test readFile and writeFile independently, handle empty files and failed opens, and keep every test responsible for its own temporary data.
+</p>
+<div class="card-bottom"><span>15–25 MIN</span><span>Read lesson →</span>
+</div></a>
+</div>
+<div class="prose">
+<h2>Why a framework?
+</h2>
+<p>A program that prints “Hello tests!” and returns zero proves that it runs. It says nothing about whether your reader preserves bytes. A useful test arranges a concrete situation, calls the function, then compares the observed result with an independent expectation.
+</p>
+<p>Manual try/catch blocks can implement a tiny test runner, but that is not the pattern to grow here. Catch2 supplies named cases and diagnostic assertions. GoogleTest and doctest are reasonable alternatives; this notebook chooses Catch2 for its readable expressions and straightforward CMake integration.
+</p>
+<aside class="callout"><strong>The contract comes first</strong>
+<p>A contract is the behavior a caller can rely on. For these helpers: preserve every byte, truncate overwritten files, accept empty files, and report failed opens. Passing tests provide evidence for those examples; they do not prove all possible IO succeeds.
+</p>
+</aside>
+<h2>What you will build
+</h2>
+<p>Eight named cases, including independent read and write checks, a shorter overwrite, empty writes, missing paths, and a round trip. You will use real files because the filesystem is the behavior being tested. These are small filesystem integration tests, even if your project groups them under “unit tests.”
+</p>
+<p>The downloadable checkpoint is separate from the engine and needs no graphics library. Its IO code is a teaching snapshot, not a claim that the production writer handles every failure.
+</p>
+<div class="intro-actions"><a class="button" href="01-catch2-ctest.html">Start with the tools →</a><a class="button secondary" href="examples/morph-testing.zip" download>Download complete checkpoint ↓</a>
+</div>
+<h2>Before you begin
+</h2>
+<p>You need basic C++ functions and vectors, CMake 3.25 or newer, a C++20 compiler, and a build tool. The first example build downloads pinned Catch2 3.8.1; this is the course version, not a claim about the latest release. Reading the site requires no installation.
+</p>
+</div>
+<nav class="lesson-footer" aria-label="Continue learning"><span>Begin with the tools.</span><a href="01-catch2-ctest.html">Wire up the tools →</a>
+</nav>
+<footer class="site-footer"><span>MORPH / LEARN BY CHECKING YOUR ASSUMPTIONS</span><span>One library. Eight cases. Clear expectations.</span>
+</footer>
+</div>
+</main>
+</div>
+</body>
 </html>

@@ -89,8 +89,6 @@ std::optional<RayHit> castRay(const int (&map) [Height][Width], const Vector2 or
                     ),
             };
         }
-
-
     }
     return std::nullopt;
 }

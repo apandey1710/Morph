@@ -1,4 +1,5 @@
 #include <io.hpp>
+#include <stdexcept>
 #include <filesystem>
 #include <fstream>
 #include <ios>

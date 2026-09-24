@@ -1,0 +1,199 @@
+<!doctype html>
+
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Test readFile and writeFile independently, handle empty files and failed opens, and keep every test responsible for its own temporary data."><meta name="theme-color" content="#233b3d"><title>Test real file IO — Morph Testing Notebook</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/style.css"><script type="module" src="assets/site.mjs"></script>
+</head>
+
+<body><a class="skip" href="#main">Skip to content</a>
+<div class="shell">
+<aside class="sidebar"><a class="brand" href="index.html">Morph <small>LAB</small></a>
+<div class="nav-label">The testing notebook
+</div>
+<nav aria-label="Lessons"><a href="index.html"><span class="nav-number">00</span>Overview</a><a href="01-catch2-ctest.html"><span class="nav-number">01</span>Wire up the tools</a><a href="02-assertions.html"><span class="nav-number">02</span>Write useful assertions</a><a href="03-file-io.html" aria-current="page"><span class="nav-number">03</span>Test real file IO</a>
+</nav>
+<div class="sidebar-bottom">Small tests.<br>Specific promises.<a href="examples/morph-testing.zip" download>Download the checkpoint ↓</a><a href="https://github.com/apandey1710/Morph">Project on GitHub ↗</a>
+</div>
+</aside>
+<main id="main" class="main">
+<div class="content">
+<header class="topbar"><span>FIELD NOTES / SOFTWARE TESTING</span><span class="status">C++20 · Catch2 · CTest</span>
+</header>
+<section class="hero">
+<div class="eyebrow">MORPH / LESSON 03
+</div>
+<h1>Real bytes.<br><em>Isolated files.</em>
+</h1>
+<p class="lead">Test readFile and writeFile independently, handle empty files and failed opens, and keep every test responsible for its own temporary data.
+</p>
+<div class="hero-meta"><span>Real project examples</span><span>Runnable C++ checkpoint</span><span>No custom test runner</span>
+</div>
+</section>
+<noscript>
+<p>All lessons and downloads work without JavaScript. The assertion lab and copy buttons require it.
+</p>
+</noscript>
+<div class="prose">
+<h2 id="contract">Choose observable promises
+</h2>
+<p>A byte is one unit of binary storage. The payload below includes a zero, line-ending bytes, and values above 127. Those catch assumptions that file contents are ordinary text. A zero byte is data, not an instruction to stop reading.
+</p>
+<pre data-copy><code>std::vector&lt;std::byte&gt; expected{
+    std::byte{0x00}, std::byte{0x0A}, std::byte{0x0D},
+    std::byte{0x7F}, std::byte{0x80}, std::byte{0xFF}
+};</code>
+</pre>
+<p>The current writer accepts <code>std::span&lt;std::byte&gt;</code>, so its input vector must be mutable. A read-only span would better describe a writer that only observes its input, but that API improvement is separate from designing these tests.
+</p>
+<div class="table-wrap">
+<table>
+<tr><th>Situation</th><th>Expectation</th>
+</tr>
+<tr><td>Read known binary bytes</td><td>Every byte and the total length match.</td>
+</tr>
+<tr><td>Read an empty file</td><td>Return an empty vector.</td>
+</tr>
+<tr><td>Read a missing file</td><td>Throw std::runtime_error.</td>
+</tr>
+<tr><td>Write a new binary file</td><td>Create exactly the supplied bytes.</td>
+</tr>
+<tr><td>Overwrite six bytes with one</td><td>Leave one byte, with no old suffix.</td>
+</tr>
+<tr><td>Write no bytes, new or existing file</td><td>Leave an existing zero-length file.</td>
+</tr>
+<tr><td>Write below a missing parent</td><td>Throw; do not silently create directories.</td>
+</tr>
+<tr><td>Write and read a payload</td><td>Recover the original bytes.</td>
+</tr>
+</table>
+</div>
+<h2 id="independent">Give each function an independent witness
+</h2>
+<p>For a reader test, create the fixture with a standard output stream. For a writer test, inspect the result with a standard input stream. If both Morph helpers applied the same reversible transformation, a round trip could pass while the actual on-disk format was wrong.
+</p>
+<p class="code-caption">Fragment from io_tests.cpp — helper definitions are in the download
+</p>
+<pre data-copy><code>TEST_CASE(&quot;readFile preserves binary bytes&quot;, &quot;[io][read]&quot;)
+{
+    TempDirectory directory;
+    const auto path = directory.file(&quot;binary.bin&quot;);
+    const auto expected = payload();
+    seed(path, expected);
+
+    const auto actual = morph::io::readFile(path);
+
+    REQUIRE(actual == expected);
+}</code>
+</pre>
+<p><code>seed</code> creates known contents and checks the stream after closing. <code>inspect</code> reads one char at a time, converts through unsigned char to preserve high-bit values, and distinguishes end-of-file from a bad stream. These helpers use the standard library directly; they do not call the Morph functions.
+</p>
+<h2 id="isolation">Own the temporary directory
+</h2>
+<p>A fixture is the setup a test needs: here, a private directory and perhaps an initial file. Do not use a fixed shared filename, a real asset, or the repository’s working files. CTest can run cases concurrently, and a previous failed run must not decide the next result.
+</p>
+<p class="code-caption">temp_directory.hpp — complete helper
+</p>
+<pre data-copy><code>#pragma once
+#include &lt;filesystem&gt;
+#include &lt;random&gt;
+#include &lt;stdexcept&gt;
+#include &lt;string&gt;
+#include &lt;system_error&gt;
+#include &lt;utility&gt;
+
+// Own only a directory that this object successfully created.
+class TempDirectory
+{
+public:
+    TempDirectory()
+    {
+        std::random_device random;
+        const auto base = std::filesystem::temp_directory_path();
+        for (int attempt = 0; attempt &lt; 100; ++attempt)
+        {
+            auto candidate = base / (&quot;morph-io-test-&quot; + std::to_string(random())
+                + &quot;-&quot; + std::to_string(random()));
+            // Atomic creation avoids reusing another test&#x27;s directory.
+            if (std::filesystem::create_directory(candidate))
+            {
+                path_ = std::move(candidate);
+                return;
+            }
+        }
+        throw std::runtime_error(&quot;Could not create a unique test directory&quot;);
+    }
+
+    ~TempDirectory()
+    {
+        std::error_code ignored;
+        std::filesystem::remove_all(path_, ignored);
+    }
+
+    TempDirectory(const TempDirectory&amp;) = delete;
+    TempDirectory&amp; operator=(const TempDirectory&amp;) = delete;
+
+    std::filesystem::path file(const std::string&amp; name) const
+    {
+        return path_ / name;
+    }
+
+private:
+    std::filesystem::path path_;
+};</code>
+</pre>
+<p>The constructor reserves a directory by creating it, rather than merely guessing an unused name. The 100 attempts bound retries for name collisions; filesystem errors propagate immediately. The object owns only a directory it successfully created. Copying is disabled so two owners cannot delete the same directory.
+</p>
+<p>This is RAII: resource acquisition is initialization. The object acquires its directory during construction and releases it during destruction, including when a fatal assertion unwinds the test. Cleanup uses the error-code overload so its destructor cannot throw. A process crash or cleanup permission error may still leave a directory behind; this helper is for ordinary test isolation, not a security boundary.
+</p>
+<h2 id="overwrite">Test the overwrite, not just creation
+</h2>
+<p class="code-caption">Fragment from io_tests.cpp
+</p>
+<pre data-copy><code>TEST_CASE(&quot;writeFile truncates a longer file&quot;, &quot;[io][write]&quot;)
+{
+    TempDirectory directory;
+    const auto path = directory.file(&quot;overwrite.bin&quot;);
+    seed(path, payload());
+    std::vector&lt;std::byte&gt; shorter{std::byte{0x42}};
+    morph::io::writeFile(path, shorter);
+    REQUIRE(inspect(path) == shorter);
+    CHECK(std::filesystem::file_size(path) == 1);
+}</code>
+</pre>
+<p>Writing the same six bytes over six bytes would not reveal retained trailing data. Deliberately shrink the payload. That one choice makes the test discriminate between overwriting and appending.
+</p>
+<h2 id="limits">Know what this suite does not prove
+</h2>
+<aside class="callout"><strong>A real limitation in the current writer</strong>
+<p>The teaching snapshot checks whether opening succeeded but does not check stream state after writing or closing. The eight cases can pass while a disk-full error goes unreported. A successful open is not a guarantee of a successful write.
+</p>
+</aside>
+<p>A future fix should explicitly detect write and close failures, with a targeted failure test. Portable ways to force those errors are limited. Permission tests vary by operating system and can pass unexpectedly under privileged accounts; disk exhaustion is disruptive. Do not make either a prerequisite for this beginner suite.
+</p>
+<p>Likewise, the suite does not simulate a file changing between size measurement and reading, and successful close is not a guarantee of durability through power loss. Add tests for those promises only if your API needs to make them. Avoid refactoring the reader into a mockable stream architecture just to cover every branch at this stage.
+</p>
+<h2 id="checkpoint">Run the complete checkpoint
+</h2>
+<div class="download-links"><a href="examples/morph-testing.zip" download>Complete ZIP ↓</a><a href="examples/io_tests.cpp">Test source</a><a href="examples/temp_directory.hpp">Temporary directory helper</a><a href="examples/CMakeLists.txt">Standalone CMake</a><a href="examples/README.md">Build notes</a>
+</div>
+<pre data-copy><code># From the Morph repository root:
+cmake -S docs/examples -B build-tutorial -DCMAKE_BUILD_TYPE=Debug
+cmake --build build-tutorial --parallel 2
+ctest --test-dir build-tutorial --output-on-failure
+ctest --test-dir build-tutorial --parallel 4 --output-on-failure</code>
+</pre>
+<p>Expect eight discovered test cases; the empty-write case exercises two section paths. Repeating with parallel execution should give the same result. To integrate into Morph, copy only the test source and helper into <code>tests/</code>, and use lesson 1’s CMake integration. Keep using the existing <code>morph::io</code> library instead of copying the snapshot over production code.
+</p>
+<h2>Your next experiment
+</h2>
+<p>Add a payload containing each possible byte value from 0 through 255. Predict what this adds beyond the six-byte sample, and what it still cannot prove. Then temporarily corrupt one byte in your disposable writer: the independent write test should fail even if a matching reader could reverse the corruption.
+</p>
+</div>
+<nav class="lesson-footer" aria-label="Continue learning"><a href="02-assertions.html">← Write useful assertions</a><a href="index.html">Back to overview →</a>
+</nav>
+<footer class="site-footer"><span>MORPH / LEARN BY CHECKING YOUR ASSUMPTIONS</span><span>One library. Eight cases. Clear expectations.</span>
+</footer>
+</div>
+</main>
+</div>
+</body>
+</html>
