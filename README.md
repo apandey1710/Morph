@@ -3,13 +3,6 @@
 A C++ graphics learning project building toward a Wolfenstein-style raycaster.
 The initial application opens a raylib window and draws "Hello, world!".
 
-## C++ testing tutorial
-
-The [testing notebook](docs/index.html) teaches Catch2 assertions, CMake/CTest
-integration, and isolated tests for `readFile` and `writeFile`. It includes an
-interactive assertion lab and a standalone downloadable C++20 checkpoint.
-See the [site guide](docs/README.md) for preview, validation, and publishing.
-
 ## Build and run
 
 Requires CMake 3.25 or newer, a C compiler, a C++20 compiler, and a native build
