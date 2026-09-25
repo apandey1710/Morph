@@ -1,7 +1,8 @@
-#include <iostream>
+#include <catch2/catch_test_macros.hpp>
 
-int main()
+#include <io.hpp>
+
+TEST_CASE("io tests are not written yet", "[io]")
 {
-    std::cout << "Hello tests!" << std::endl;
-    return 0;
+    SKIP("Placeholder: add readFile and writeFile tests here.");
 }

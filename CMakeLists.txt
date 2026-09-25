@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 
 project(Morph VERSION 0.1.0 LANGUAGES C CXX)
+include(CTest)
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -15,6 +16,12 @@ FetchContent_Declare(raylib
 )
 FetchContent_MakeAvailable(raylib)
 
+# Catch2 v3.8.1, verified by SHA-256; made available only when tests are built.
+FetchContent_Declare(Catch2
+        URL https://codeload.github.com/catchorg/Catch2/tar.gz/refs/tags/v3.8.1
+        URL_HASH SHA256=18b3f70ac80fccc340d8c6ff0f339b2ae64944782f8d2fca2bd705cf47cadb79
+)
+
 add_subdirectory(libs/math)
 add_subdirectory(libs/util)
 add_subdirectory(libs/graphics)
@@ -26,5 +33,3 @@ endif()
 
 add_executable(morph src/main.cpp)
 target_link_libraries(morph PRIVATE raylib morph::math morph::util morph::graphics morph::io)
-
-add_test(NAME morph_io_tests COMMAND morph_io_tests)
