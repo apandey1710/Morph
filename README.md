@@ -27,6 +27,17 @@ generators.
 
 The window displays centered text. Press Escape or close the window to exit.
 
+## Tests
+
+Tests are built by default and run with CTest:
+
+```sh
+ctest --test-dir build --output-on-failure
+```
+
+See [tests/README.md](tests/README.md) for filtering tests, running Catch2
+executables directly, reading failures, and adding new tests.
+
 ## Level and coordinate conventions
 
 These conventions define the initial grid-based level model; level rendering

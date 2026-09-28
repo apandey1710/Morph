@@ -1,0 +1,18 @@
+{
+    // Match the README: `cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug` with Ninja.
+    "cmake.sourceDirectory": "${workspaceFolder}",
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "cmake.generator": "Ninja",
+    "cmake.configureOnOpen": true,
+
+    // Run and debug the game from the project root so relative asset paths work.
+    "cmake.debugConfig": {
+        "cwd": "${workspaceFolder}"
+    },
+
+    // Show Catch2 tests (registered through CTest) in the Testing view.
+    "cmake.ctest.testExplorerIntegrationEnabled": true,
+
+    // IntelliSense takes include paths, defines, and C++20 from CMake.
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
+}
