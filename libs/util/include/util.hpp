@@ -1,22 +1,24 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 #include <optional>
 #include <vector>
+#include <span>
+#include <array>
 
 namespace morph::util
 {
-// Future shared utility declarations belong here.
     struct Map
     {
-        std::uint32_t width;
-        std::uint32_t height;
+        std::uint32_t width = 0;
+        std::uint32_t height = 0;
         std::vector<std::uint8_t> cells;
 
-        std::optional<std::uint8_t> cell(std::uint32_t x, std::uint32_t y);
+        std::optional<std::uint8_t> cell(std::uint32_t x, std::uint32_t y) const;
     };
 
-    std::optional<Map> decodeMap(const std::vector<std::byte>& bytes);
-    std::optional<std::vector<std::byte>> encodeMap(const Map& bytes);
+    std::optional<Map> decodeMap(std::span<const std::byte> bytes);
+    std::optional<std::vector<std::byte>> encodeMap(const Map& map);
 }
 
