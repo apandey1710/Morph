@@ -8,7 +8,7 @@ constexpr unsigned int pixelsPerCell = 48;
 constexpr int offsetX = 24;
 constexpr int offsetY = 24;
 
-constexpr Vector2 playerPosition{2.7f, 1.3f};
+constexpr morph::math::Vec2 playerPosition{2.7f, 1.3f};
 
 constexpr int level[mapHeight][mapWidth] = {
     {1, 1, 1, 1, 1, 1, 1, 1},
@@ -21,7 +21,8 @@ constexpr int level[mapHeight][mapWidth] = {
     {1, 1, 1, 1, 1, 1, 1, 1},
 };
 
-Vector2 toScreen(Vector2 world)
+// World units -> raylib screen pixels; the only place engine and raylib vectors meet.
+Vector2 toScreen(morph::math::Vec2 world)
 {
     return Vector2 {
         offsetX + world.x * pixelsPerCell,
@@ -64,7 +65,7 @@ int main()
             }
         }
 
-        constexpr Vector2 direction = {2.0f, 0.64f};
+        constexpr morph::math::Vec2 direction = {2.0f, 0.64f};
 
         const auto hit = morph::graphics::castRay(level, playerPosition, direction);
         if (hit)

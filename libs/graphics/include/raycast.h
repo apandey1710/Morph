@@ -1,6 +1,6 @@
 #pragma once
 
-#include <raylib.h>
+#include <math.hpp>
 
 #include <cmath>
 #include <limits>
@@ -20,12 +20,12 @@ namespace morph::graphics
         int cellY;
         Side side;
         double t;
-        Vector2 position;
+        math::Vec2 position;
     };
 
 // Template definitions must be visible to callers.
 template<int Height, int Width>
-std::optional<RayHit> castRay(const int (&map) [Height][Width], const Vector2 origin, Vector2 direction)
+std::optional<RayHit> castRay(const int (&map) [Height][Width], const math::Vec2 origin, math::Vec2 direction)
 {
 
     if (!std::isfinite(origin.x) || !std::isfinite(origin.y) || !std::isfinite(direction.x) || !std::isfinite(direction.y)  ||
@@ -83,10 +83,10 @@ std::optional<RayHit> castRay(const int (&map) [Height][Width], const Vector2 or
                 cellY,
                 s,
                 t,
-                Vector2(
+                math::Vec2{
                     static_cast<float>(origin.x + t * direction.x),
                     static_cast<float>(origin.y + t * direction.y)
-                    ),
+                    },
             };
         }
     }

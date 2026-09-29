@@ -14,7 +14,7 @@ tests:
 ```text
 tests/io_tests.cpp       ->  morph_io_tests       links morph::io
 tests/util_tests.cpp     ->  morph_util_tests     links morph::util
-tests/raycast_tests.cpp  ->  morph_raycast_tests  links morph::graphics (and raylib)
+tests/raycast_tests.cpp  ->  morph_raycast_tests  links morph::graphics (and morph::math)
 ```
 
 ## 1. Build and run everything
