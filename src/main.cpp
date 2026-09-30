@@ -1,6 +1,9 @@
+#include <cstdint>
 #include <raycast.h>
-
-#include <raylib.h>
+#include <math.hpp>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
+#include <vector>
 
 constexpr unsigned int mapWidth = 8;
 constexpr unsigned int mapHeight = 8;
@@ -8,76 +11,78 @@ constexpr unsigned int pixelsPerCell = 48;
 constexpr int offsetX = 24;
 constexpr int offsetY = 24;
 
-constexpr morph::math::Vec2 playerPosition{2.7f, 1.3f};
-
-constexpr int level[mapHeight][mapWidth] = {
-    {1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 1, 0, 0, 0, 1},
-    {1, 0, 0, 1, 0, 1, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1},
-};
-
 // World units -> raylib screen pixels; the only place engine and raylib vectors meet.
-Vector2 toScreen(morph::math::Vec2 world)
+morph::math::Vec2 toScreen(morph::math::Vec2 world)
 {
-    return Vector2 {
+    return morph::math::Vec2 {
         offsetX + world.x * pixelsPerCell,
         offsetY + world.y * pixelsPerCell
     };
 }
 
 
-
-int main()
+int main(int argc, char* argv[])
 {
-    constexpr int screenWidth = 960;
-    constexpr int screenHeight = 540;
 
-    InitWindow(screenWidth, screenHeight, "Morph");
-    if (!IsWindowReady())
+    (void)argc;
+    (void)argv;
+
+    constexpr int screenWidth = 320;
+    constexpr int screenHeight = 200;
+
+    if (!SDL_Init(SDL_INIT_VIDEO))
     {
+        SDL_Log("SDL_Init failed: %s", SDL_GetError());
         return 1;
     }
 
-    SetTargetFPS(60);
-    while (!WindowShouldClose())
+    SDL_Window* window = nullptr;
+    SDL_Renderer* renderer = nullptr;
+    if (!SDL_CreateWindowAndRenderer("Morph", screenWidth, screenHeight, SDL_WINDOW_RESIZABLE, &window, &renderer))
     {
-        BeginDrawing();
-        ClearBackground(RAYWHITE);
+        SDL_Log("SDL_CreateWindowAndRenderer failed: %s", SDL_GetError());
+        SDL_Quit();
+        return 1; 
+    }   
 
-        for (auto y = 0; y < mapWidth; y++)
+    SDL_SetRenderVSync(renderer, 1);
+
+    std::vector<std::uint32_t> pixels(screenWidth * screenHeight);
+    SDL_Texture* frame = SDL_CreateTexture(renderer, 
+        SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING,
+        screenWidth, screenHeight);
+    SDL_SetTextureScaleMode(frame, SDL_SCALEMODE_NEAREST);
+    SDL_SetRenderLogicalPresentation(renderer, screenWidth, screenHeight,
+                                 SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
+    bool running = true;
+    while (running)
+    {
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
         {
-            for (auto x = 0; x < mapHeight; x++)
+            if (event.type == SDL_EVENT_QUIT)
             {
-                const Color color = level[y][x] == 0 ? LIGHTGRAY : DARKGRAY;
-                DrawRectangle(
-                    offsetX + x * pixelsPerCell,
-                    offsetY + y * pixelsPerCell,
-                    pixelsPerCell - 1,
-                    pixelsPerCell - 1,
-                    color);
-                Vector2 playerScreen  = toScreen(playerPosition);
-                DrawCircleV(playerScreen, 5.0f, BLUE);
+                running = false;
+            }
+            else if (event.type == SDL_EVENT_KEY_DOWN && event.type == SDLK_ESCAPE)
+            {
+                running = false;
+            }
+            else if (event.type == SDL_EVENT_KEY_DOWN)
+            {
+                SDL_Log("key=%s scancode=%s repeat=%d",
+                    SDL_GetKeyName(event.key.key),
+                    SDL_GetScancodeName(event.key.scancode),
+                    event.key.repeat);SDL_GetKeyName(event.key.key);
             }
         }
 
-        constexpr morph::math::Vec2 direction = {2.0f, 0.64f};
-
-        const auto hit = morph::graphics::castRay(level, playerPosition, direction);
-        if (hit)
-        {
-            const Color color = hit->side == morph::graphics::Side::X ? SKYBLUE : ORANGE;
-            DrawLineV(toScreen(playerPosition), toScreen(hit->position), color);
-            DrawCircleV(toScreen(hit->position), 3.0f, color);
-        }
-
-        EndDrawing();
     }
 
-    CloseWindow();
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+    
     return 0;
 }

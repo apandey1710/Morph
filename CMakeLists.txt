@@ -16,6 +16,19 @@ FetchContent_Declare(raylib
 )
 FetchContent_MakeAvailable(raylib)
 
+# SDL 3.4.16, verified by SHA-256. Built statically so the executable needs no
+# SDL shared library at runtime; the SDL3_test helper library is not needed.
+# Video backends are chosen at configure time from the installed X11/Wayland
+# development packages, so check the configure summary if SDL_Init fails.
+set(SDL_SHARED OFF CACHE BOOL "Build a shared version of SDL3")
+set(SDL_STATIC ON CACHE BOOL "Build a static version of SDL3")
+set(SDL_TEST_LIBRARY OFF CACHE BOOL "Build the SDL3_test library")
+FetchContent_Declare(SDL3
+    URL https://github.com/libsdl-org/SDL/releases/download/release-3.4.16/SDL3-3.4.16.tar.gz
+    URL_HASH SHA256=7322236cd12090c3eb40b9728be4d49c76f66ad17d04369584d4ecad5cf77c68
+)
+FetchContent_MakeAvailable(SDL3)
+
 # Catch2 v3.8.1, verified by SHA-256; made available only when tests are built.
 FetchContent_Declare(Catch2
         URL https://codeload.github.com/catchorg/Catch2/tar.gz/refs/tags/v3.8.1
@@ -32,4 +45,5 @@ if(BUILD_TESTING)
 endif()
 
 add_executable(morph src/main.cpp)
-target_link_libraries(morph PRIVATE raylib morph::math morph::util morph::graphics morph::io)
+# raylib stays linked until main.cpp is ported to SDL3.
+target_link_libraries(morph PRIVATE raylib SDL3::SDL3 morph::math morph::util morph::graphics morph::io)

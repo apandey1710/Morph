@@ -3,6 +3,12 @@
 A C++ graphics learning project building toward a Wolfenstein-style raycaster.
 The initial application opens a raylib window and draws "Hello, world!".
 
+## Tutorials
+
+- [SDL3 Hello, World](https://claude.ai/artifact/4EgtCw1QeuvzFCM9Yfuz4y):
+  a window, an event loop, and centered text with SDL 3.4, as the first step in
+  porting `src/main.cpp` from raylib to SDL3.
+
 ## Build and run
 
 Requires CMake 3.25 or newer, a C compiler, a C++20 compiler, and a native build
