@@ -1,8 +1,8 @@
 {
-    // Match the README: `cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug` with Ninja.
+    // Compiler, generator, and build directory come from CMakePresets.json
+    // (Clang + Ninja, built under build/<preset>), matching the README.
     "cmake.sourceDirectory": "${workspaceFolder}",
-    "cmake.buildDirectory": "${workspaceFolder}/build",
-    "cmake.generator": "Ninja",
+    "cmake.useCMakePresets": "always",
     "cmake.configureOnOpen": true,
 
     // Run and debug the game from the project root so relative asset paths work.

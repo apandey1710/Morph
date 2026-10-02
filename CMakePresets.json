@@ -1,0 +1,69 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 25,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "clang",
+            "hidden": true,
+            "description": "Clang's GNU-style driver with Ninja, so flags and diagnostics match on Windows and Linux.",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        },
+        {
+            "name": "clang-debug",
+            "displayName": "Clang Debug",
+            "inherits": "clang",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "clang-release",
+            "displayName": "Clang Release",
+            "description": "Optimized build that keeps debug info for profiling.",
+            "inherits": "clang",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "clang-debug",
+            "displayName": "Clang Debug",
+            "configurePreset": "clang-debug"
+        },
+        {
+            "name": "clang-release",
+            "displayName": "Clang Release",
+            "configurePreset": "clang-release"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "clang-debug",
+            "displayName": "Clang Debug",
+            "configurePreset": "clang-debug",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "clang-release",
+            "displayName": "Clang Release",
+            "configurePreset": "clang-release",
+            "output": {
+                "outputOnFailure": true
+            }
+        }
+    ]
+}

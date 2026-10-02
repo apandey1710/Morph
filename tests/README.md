@@ -22,18 +22,18 @@ tests/raycast_tests.cpp  ->  morph_raycast_tests  links morph::graphics (and mor
 From the repository root:
 
 ```sh
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
-cmake --build build --parallel
-ctest --test-dir build --output-on-failure
+cmake --preset clang-debug
+cmake --build --preset clang-debug
+ctest --preset clang-debug
 ```
 
 Tests are on by default. The first configure downloads Catch2 with CMake
 FetchContent and verifies the archive with SHA-256, the same way raylib is
 fetched.
 
-`--output-on-failure` makes CTest print Catch2's report for any test that fails.
-Without it, CTest only shows `Failed` and you have to rerun the test to find out
-why.
+The test preset turns on CTest's `--output-on-failure`, which prints Catch2's
+report for any test that fails. Without it, CTest only shows `Failed` and you
+have to rerun the test to find out why.
 
 Right now each file contains a single placeholder that calls `SKIP`, so a clean
 run looks like this:
@@ -72,12 +72,12 @@ Two consequences:
 ## 3. Choosing which tests to run
 
 ```sh
-ctest --test-dir build -N                         # list tests without running them
-ctest --test-dir build -R util                    # names matching a regular expression
-ctest --test-dir build -L raycast                 # tests with a label (a Catch2 tag)
-ctest --test-dir build --print-labels             # list every label
-ctest --test-dir build --rerun-failed --output-on-failure
-ctest --test-dir build -j 8                       # run tests in parallel
+ctest --preset clang-debug -N                # list tests without running them
+ctest --preset clang-debug -R util           # names matching a regular expression
+ctest --preset clang-debug -L raycast        # tests with a label (a Catch2 tag)
+ctest --preset clang-debug --print-labels    # list every label
+ctest --preset clang-debug --rerun-failed
+ctest --preset clang-debug -j 8              # run tests in parallel
 ```
 
 `-R` and `-L` both take regular expressions, so `-L "util|raycast"` selects
@@ -85,16 +85,16 @@ both groups.
 
 ## 4. Running a test executable directly
 
-The executables are in `build/tests/`. Running one directly skips CTest and
-gives you Catch2's own options, which help while you're working on a single
-test:
+The executables are in `build/clang-debug/tests/`. Running one directly skips
+CTest and gives you Catch2's own options, which help while you're working on a
+single test:
 
 ```sh
-./build/tests/morph_util_tests                    # run every test case in the file
-./build/tests/morph_util_tests "[util]"           # only test cases with a tag
-./build/tests/morph_util_tests "cell*"            # test cases whose names match a wildcard
-./build/tests/morph_util_tests --list-tests       # list test cases and their tags
-./build/tests/morph_util_tests --success          # also print checks that passed
+./build/clang-debug/tests/morph_util_tests                # run every test case in the file
+./build/clang-debug/tests/morph_util_tests "[util]"       # only test cases with a tag
+./build/clang-debug/tests/morph_util_tests "cell*"        # test cases whose names match a wildcard
+./build/clang-debug/tests/morph_util_tests --list-tests   # list test cases and their tags
+./build/clang-debug/tests/morph_util_tests --success      # also print checks that passed
 ```
 
 This is also the easiest way to run one test under a debugger.

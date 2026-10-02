@@ -20,16 +20,26 @@ See the [official Linux build instructions](https://github.com/raysan5/raylib/wi
 for your distribution. This setup uses raylib's default desktop backend (X11 on
 Linux, including XWayland on Wayland desktops).
 
+The project builds with Clang and Ninja through the presets in
+`CMakePresets.json`; `clang`, `clang++`, and `ninja` must be on `PATH`. On
+Windows, Clang also needs the Visual Studio (or Build Tools) C++ workload and a
+Windows SDK, which it uses for the standard library and system headers.
+
 ```sh
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
-cmake --build build --parallel
-./build/morph
+cmake --preset clang-debug
+cmake --build --preset clang-debug
+./build/clang-debug/morph
 ```
 
-For multi-configuration generators such as Visual Studio, build with
-`cmake --build build --config Debug`; the executable is under `build/Debug/`
-(`morph.exe` on Windows). `CMAKE_BUILD_TYPE` applies to single-configuration
-generators.
+Use `clang-release` for an optimized build with debug info. Each preset builds
+in its own directory under `build/` (`morph.exe` on Windows). In VS Code, pick
+a preset from the CMake Tools status bar.
+
+To use a different toolchain, configure manually, for example
+`cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug`. For multi-configuration
+generators such as Visual Studio, build with
+`cmake --build build --config Debug`; `CMAKE_BUILD_TYPE` applies only to
+single-configuration generators.
 
 The window displays centered text. Press Escape or close the window to exit.
 
@@ -38,7 +48,7 @@ The window displays centered text. Press Escape or close the window to exit.
 Tests are built by default and run with CTest:
 
 ```sh
-ctest --test-dir build --output-on-failure
+ctest --preset clang-debug
 ```
 
 See [tests/README.md](tests/README.md) for filtering tests, running Catch2

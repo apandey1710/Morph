@@ -3,6 +3,12 @@ cmake_minimum_required(VERSION 3.25)
 project(Morph VERSION 0.1.0 LANGUAGES C CXX)
 include(CTest)
 
+# Compile every target, including fetched dependencies, as C++20. Catch2 only
+# requests C++14, and Clang targeting MSVC defaults to C++14, so without this
+# Catch2 is built without the C++17 std::byte support its headers declare to
+# our C++20 tests, and the tests fail to link.
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
