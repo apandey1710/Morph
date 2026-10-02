@@ -14,5 +14,8 @@
     "cmake.ctest.testExplorerIntegrationEnabled": true,
 
     // IntelliSense takes include paths, defines, and C++20 from CMake.
-    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+
+    // Create new files with LF to match .gitattributes.
+    "files.eol": "\n"
 }
